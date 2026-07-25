@@ -7,44 +7,34 @@ import '../../widgets/common/loading_overlay.dart';
 
 class VehiclesScreen extends ConsumerStatefulWidget {
   const VehiclesScreen({super.key});
-
   @override
   ConsumerState<VehiclesScreen> createState() => _VehiclesScreenState();
 }
 
 class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
-  List<Map<String, dynamic>> _items = [];
+  List<Map<String, dynamic>> _vehicles = [];
   bool _loading = true;
-  String? _error;
 
   @override
-  void initState() {
-    super.initState();
-    _loadData();
-  }
+  void initState() { super.initState(); _loadData(); }
 
   Future<void> _loadData() async {
-    setState(() { _loading = true; _error = null; });
+    setState(() => _loading = true);
     try {
       final dioClient = ref.read(dioClientProvider);
       await dioClient.initBaseUrl();
       final response = await dioClient.dio.get(AppConstants.endpointVehicles);
       final data = response.data as Map<String, dynamic>;
       if (data['sucesso'] == true) {
-        final rawData = data['dados'];
-        if (rawData is List) {
-          setState(() => _items = List<Map<String, dynamic>>.from(rawData));
-        } else if (rawData is Map) {
-          setState(() => _items = [Map<String, dynamic>.from(rawData)]);
+        final dados = data['dados'];
+        if (dados is Map && dados['veiculos'] != null) {
+          setState(() => _vehicles = List<Map<String, dynamic>>.from(dados['veiculos']));
+        } else if (dados is List) {
+          setState(() => _vehicles = List<Map<String, dynamic>>.from(dados));
         }
-      } else {
-        setState(() => _error = data['mensagem']?.toString());
       }
-    } catch (e) {
-      setState(() => _error = 'Erro ao carregar dados: $e');
-    } finally {
-      if (mounted) setState(() => _loading = false);
-    }
+    } catch (e) { debugPrint('[VehiclesScreen] Error: $e'); }
+    finally { if (mounted) setState(() => _loading = false); }
   }
 
   @override
@@ -53,27 +43,68 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
       onRefresh: _loadData,
       child: _loading
           ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? ErrorState(message: _error!, onRetry: _loadData)
-              : _items.isEmpty
-                  ? const EmptyState(
-                      icon: Icons.directions_car,
-                      message: 'Nenhum item encontrado.',
-                    )
-                  : ListView.builder(
-                      padding: const EdgeInsets.all(16),
-                      itemCount: _items.length,
-                      itemBuilder: (context, index) {
-                        final item = _items[index];
-                        return Card(
-                          child: ListTile(
-                            leading: const Icon(Icons.directions_car, color: AppTheme.primary),
-                            title: Text(item.values.first?.toString() ?? ''),
-                            subtitle: Text(item.toString().substring(0, 60.clamp(0, item.toString().length))),
-                          ),
-                        );
-                      },
-                    ),
+          : _vehicles.isEmpty
+              ? const EmptyState(icon: Icons.directions_car, message: 'Nenhum veículo cadastrado.')
+              : ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: _vehicles.length,
+                  itemBuilder: (context, index) {
+                    final v = _vehicles[index];
+                    final isAtivo = v['ativo'] == 1 || v['ativo'] == true;
+                    return Card(
+                      child: Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Row(
+                          children: [
+                            Container(
+                              width: 48, height: 48,
+                              decoration: BoxDecoration(
+                                color: isAtivo ? AppTheme.primaryLight : Colors.grey[200],
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(Icons.directions_car, color: isAtivo ? AppTheme.primary : Colors.grey),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                        decoration: BoxDecoration(
+                                          color: Colors.grey[900],
+                                          borderRadius: BorderRadius.circular(6),
+                                        ),
+                                        child: Text(v['placa']?.toString() ?? '', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14, letterSpacing: 1.5)),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      if (!isAtivo)
+                                        Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                                          decoration: BoxDecoration(color: AppTheme.danger.withAlpha(26), borderRadius: BorderRadius.circular(10)),
+                                          child: const Text('Inativo', style: TextStyle(color: AppTheme.danger, fontSize: 11)),
+                                        ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text('${v['modelo'] ?? ''} ${v['cor'] ?? ''}'.trim(), style: const TextStyle(fontSize: 13)),
+                                  if (v['dependente_nome'] != null)
+                                    Text('Dependente: ${v['dependente_nome']}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                  if (v['tag'] != null && v['tag'].toString().isNotEmpty)
+                                    Text('TAG: ${v['tag']}', style: const TextStyle(color: Colors.grey, fontSize: 12)),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
     );
   }
 }
+
+void debugPrint(String message) { print(message); }
