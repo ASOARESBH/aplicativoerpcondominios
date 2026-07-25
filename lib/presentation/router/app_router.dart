@@ -1,0 +1,132 @@
+import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../screens/auth/login_screen.dart';
+import '../screens/auth/forgot_password_screen.dart';
+import '../screens/home/home_screen.dart';
+import '../screens/profile/profile_screen.dart';
+import '../screens/visitors/visitors_screen.dart';
+import '../screens/access/access_screen.dart';
+import '../screens/dependents/dependents_screen.dart';
+import '../screens/protocols/protocols_screen.dart';
+import '../screens/water_meter/water_meter_screen.dart';
+import '../screens/vehicles/vehicles_screen.dart';
+import '../screens/documents/documents_screen.dart';
+import '../screens/projects/projects_screen.dart';
+import '../screens/tickets/tickets_screen.dart';
+import '../screens/marketplace/marketplace_screen.dart';
+import '../screens/notifications/notifications_screen.dart';
+
+/// Rotas nomeadas do aplicativo
+class AppRoutes {
+  static const String login = '/login';
+  static const String forgotPassword = '/forgot-password';
+  static const String home = '/home';
+  static const String profile = '/profile';
+  static const String visitors = '/visitors';
+  static const String access = '/access';
+  static const String dependents = '/dependents';
+  static const String protocols = '/protocols';
+  static const String waterMeter = '/water-meter';
+  static const String vehicles = '/vehicles';
+  static const String documents = '/documents';
+  static const String projects = '/projects';
+  static const String tickets = '/tickets';
+  static const String marketplace = '/marketplace';
+  static const String notifications = '/notifications';
+}
+
+/// Configuração do roteador GoRouter
+final appRouterProvider = Provider<GoRouter>((ref) {
+  return GoRouter(
+    initialLocation: AppRoutes.login,
+    debugLogDiagnostics: true,
+    routes: [
+      GoRoute(
+        path: AppRoutes.login,
+        name: 'login',
+        builder: (context, state) => const LoginScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        name: 'forgot-password',
+        builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      ShellRoute(
+        builder: (context, state, child) => HomeScreen(child: child),
+        routes: [
+          GoRoute(
+            path: AppRoutes.home,
+            name: 'home',
+            builder: (context, state) => const ProfileScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.profile,
+            name: 'profile',
+            builder: (context, state) => const ProfileScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.visitors,
+            name: 'visitors',
+            builder: (context, state) => const VisitorsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.access,
+            name: 'access',
+            builder: (context, state) => const AccessScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.dependents,
+            name: 'dependents',
+            builder: (context, state) => const DependentsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.protocols,
+            name: 'protocols',
+            builder: (context, state) => const ProtocolsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.waterMeter,
+            name: 'water-meter',
+            builder: (context, state) => const WaterMeterScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.vehicles,
+            name: 'vehicles',
+            builder: (context, state) => const VehiclesScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.documents,
+            name: 'documents',
+            builder: (context, state) => const DocumentsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.projects,
+            name: 'projects',
+            builder: (context, state) => const ProjectsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.tickets,
+            name: 'tickets',
+            builder: (context, state) => const TicketsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.marketplace,
+            name: 'marketplace',
+            builder: (context, state) => const MarketplaceScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.notifications,
+            name: 'notifications',
+            builder: (context, state) => const NotificationsScreen(),
+          ),
+        ],
+      ),
+    ],
+    errorBuilder: (context, state) => Scaffold(
+      body: Center(
+        child: Text('Página não encontrada: ${state.error}'),
+      ),
+    ),
+  );
+});
