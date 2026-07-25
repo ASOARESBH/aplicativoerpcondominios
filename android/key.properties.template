@@ -1,0 +1,8 @@
+# ATENÇÃO: Este arquivo contém credenciais sensíveis.
+# NÃO commitar este arquivo no Git (já está no .gitignore)
+# Renomeie para key.properties e preencha com seus dados
+
+storePassword=SUA_SENHA_DO_KEYSTORE
+keyPassword=SUA_SENHA_DA_CHAVE
+keyAlias=erpcondominios
+storeFile=../erpcondominios.jks
