@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/auth_provider.dart';
+import '../screens/splash/splash_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
 import '../screens/home/home_screen.dart';
@@ -19,6 +21,7 @@ import '../screens/notifications/notifications_screen.dart';
 
 /// Rotas nomeadas do aplicativo
 class AppRoutes {
+  static const String splash = '/';
   static const String login = '/login';
   static const String forgotPassword = '/forgot-password';
   static const String home = '/home';
@@ -36,12 +39,28 @@ class AppRoutes {
   static const String notifications = '/notifications';
 }
 
-/// Configuração do roteador GoRouter
+/// Configuração do roteador GoRouter com redirect automático
 final appRouterProvider = Provider<GoRouter>((ref) {
+  final authState = ref.watch(authProvider);
+
   return GoRouter(
     initialLocation: AppRoutes.login,
-    debugLogDiagnostics: true,
+    debugLogDiagnostics: false,
+    redirect: (context, state) {
+      final isAuthenticated = authState.isAuthenticated;
+      final isLoading = authState.isLoading;
+      final isLoginPage = state.matchedLocation == AppRoutes.login || state.matchedLocation == AppRoutes.forgotPassword;
+      if (isLoading) return null;
+      if (!isAuthenticated && !isLoginPage) return AppRoutes.login;
+      if (isAuthenticated && isLoginPage) return AppRoutes.profile;
+      return null;
+    },
     routes: [
+      GoRoute(
+        path: AppRoutes.splash,
+        name: 'splash',
+        builder: (context, state) => const SplashScreen(),
+      ),
       GoRoute(
         path: AppRoutes.login,
         name: 'login',
@@ -125,7 +144,19 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(
-        child: Text('Página não encontrada: ${state.error}'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.error_outline, size: 64, color: Colors.red),
+            const SizedBox(height: 16),
+            Text('Página não encontrada: ${state.matchedLocation}'),
+            const SizedBox(height: 16),
+            ElevatedButton(
+              onPressed: () => context.go(AppRoutes.profile),
+              child: const Text('Ir para Início'),
+            ),
+          ],
+        ),
       ),
     ),
   );
