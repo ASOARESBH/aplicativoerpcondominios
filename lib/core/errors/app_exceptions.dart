@@ -10,30 +10,28 @@ class AppException implements Exception {
 }
 
 class UnauthorizedException extends AppException {
-  const UnauthorizedException([String message = 'Sessão expirada. Faça login novamente.'])
-      : super(message, statusCode: 401);
+  const UnauthorizedException([super.message = 'Sessão expirada. Faça login novamente.'])
+      : super(statusCode: 401);
 }
 
 class NetworkException extends AppException {
-  const NetworkException([String message = 'Erro de conexão. Verifique sua internet.'])
-      : super(message);
+  const NetworkException([super.message = 'Erro de conexão. Verifique sua internet.']);
 }
 
 class ServerException extends AppException {
-  const ServerException([String message = 'Erro no servidor. Tente novamente.'])
-      : super(message, statusCode: 500);
+  const ServerException([super.message = 'Erro no servidor. Tente novamente.'])
+      : super(statusCode: 500);
 }
 
 class ValidationException extends AppException {
-  const ValidationException(String message) : super(message, statusCode: 422);
+  const ValidationException(super.message) : super(statusCode: 422);
 }
 
 class NotFoundException extends AppException {
-  const NotFoundException([String message = 'Recurso não encontrado.'])
-      : super(message, statusCode: 404);
+  const NotFoundException([super.message = 'Recurso não encontrado.'])
+      : super(statusCode: 404);
 }
 
 class TimeoutException extends AppException {
-  const TimeoutException([String message = 'Tempo limite excedido. Tente novamente.'])
-      : super(message);
+  const TimeoutException([super.message = 'Tempo limite excedido. Tente novamente.']);
 }

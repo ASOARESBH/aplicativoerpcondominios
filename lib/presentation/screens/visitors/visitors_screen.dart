@@ -205,7 +205,7 @@ class _VisitorsScreenState extends ConsumerState<VisitorsScreen> {
                           ),
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
-                            value: _tipoDocumento,
+                            initialValue: _tipoDocumento,
                             decoration: const InputDecoration(labelText: 'Tipo de Documento *'),
                             items: ['CPF', 'RG', 'CNH', 'Passaporte']
                                 .map((t) => DropdownMenuItem(value: t, child: Text(t)))

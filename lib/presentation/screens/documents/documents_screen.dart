@@ -37,8 +37,9 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
       final data = response.data as Map<String, dynamic>;
       if (data['sucesso'] == true) {
         final dados = data['dados'];
-        if (dados is List) setState(() => _documents = List<Map<String, dynamic>>.from(dados));
-        else if (dados is Map && dados['documentos'] != null) setState(() => _documents = List<Map<String, dynamic>>.from(dados['documentos']));
+        if (dados is List) {
+          setState(() => _documents = List<Map<String, dynamic>>.from(dados));
+        } else if (dados is Map && dados['documentos'] != null) setState(() => _documents = List<Map<String, dynamic>>.from(dados['documentos']));
       }
     } catch (e) { debugPrint('[DocumentsScreen] Error: $e'); }
     finally { if (mounted) setState(() => _loading = false); }

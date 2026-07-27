@@ -31,8 +31,9 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
       final data = response.data as Map<String, dynamic>;
       if (data['sucesso'] == true) {
         final dados = data['dados'];
-        if (dados is Map && dados['itens'] != null) setState(() => _items = List<Map<String, dynamic>>.from(dados['itens']));
-        else if (dados is List) setState(() => _items = List<Map<String, dynamic>>.from(dados));
+        if (dados is Map && dados['itens'] != null) {
+          setState(() => _items = List<Map<String, dynamic>>.from(dados['itens']));
+        } else if (dados is List) setState(() => _items = List<Map<String, dynamic>>.from(dados));
       }
     } catch (e) { debugPrint('[MarketplaceScreen] Error: $e'); }
     finally { if (mounted) setState(() => _loading = false); }

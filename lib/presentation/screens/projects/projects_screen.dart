@@ -31,8 +31,9 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
       final data = response.data as Map<String, dynamic>;
       if (data['sucesso'] == true) {
         final dados = data['dados'];
-        if (dados is Map && dados['projetos'] != null) setState(() => _projects = List<Map<String, dynamic>>.from(dados['projetos']));
-        else if (dados is List) setState(() => _projects = List<Map<String, dynamic>>.from(dados));
+        if (dados is Map && dados['projetos'] != null) {
+          setState(() => _projects = List<Map<String, dynamic>>.from(dados['projetos']));
+        } else if (dados is List) setState(() => _projects = List<Map<String, dynamic>>.from(dados));
       }
     } catch (e) { debugPrint('[ProjectsScreen] Error: $e'); }
     finally { if (mounted) setState(() => _loading = false); }

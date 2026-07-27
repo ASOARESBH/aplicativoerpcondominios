@@ -21,7 +21,7 @@ android {
 
     defaultConfig {
         applicationId = "br.com.erpcondominios"
-        minSdk = 21  // Android 5.0+ (suporte a biometria e flutter_secure_storage)
+        minSdk = flutter.minSdkVersion  // Android 5.0+ (suporte a biometria e flutter_secure_storage)
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName

@@ -284,7 +284,7 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
                       child: Column(
                         children: [
                           DropdownButtonFormField<int>(
-                            value: _selectedVisitorId,
+                            initialValue: _selectedVisitorId,
                             decoration: const InputDecoration(labelText: 'Visitante *'),
                             items: _visitors
                                 .map((v) => DropdownMenuItem<int>(
@@ -297,7 +297,7 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
                           ),
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
-                            value: _tipoVisitante,
+                            initialValue: _tipoVisitante,
                             decoration: const InputDecoration(labelText: 'Tipo de Visitante *'),
                             items: const [
                               DropdownMenuItem(value: 'visitante', child: Text('Visitante')),
