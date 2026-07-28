@@ -1,4 +1,4 @@
-package br.com.erpcondominios.erp_condominios
+package br.com.erpcondominios
 
 import io.flutter.embedding.android.FlutterActivity
 
