@@ -182,7 +182,7 @@ class _DependentsScreenState extends ConsumerState<DependentsScreen> {
                           ),
                           const SizedBox(height: 12),
                           DropdownButtonFormField<String>(
-                            initialValue: _parentesco.isEmpty ? null : _parentesco,
+                            value: _parentesco.isEmpty ? null : _parentesco,
                             decoration: const InputDecoration(labelText: 'Parentesco'),
                             items: ['Cônjuge', 'Filho(a)', 'Pai/Mãe', 'Irmão(ã)', 'Outro']
                                 .map((p) => DropdownMenuItem(value: p, child: Text(p)))

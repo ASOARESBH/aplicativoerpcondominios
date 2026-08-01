@@ -49,10 +49,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     redirect: (context, state) {
       final isAuthenticated = authState.isAuthenticated;
       final isLoading = authState.isLoading;
-      final isLoginPage = state.matchedLocation == AppRoutes.login || state.matchedLocation == AppRoutes.forgotPassword;
+      final currentPath = state.matchedLocation;
+      final isPublicPage = currentPath == AppRoutes.login ||
+          currentPath == AppRoutes.forgotPassword ||
+          currentPath == AppRoutes.splash;
+
+      // Nunca redirecionar enquanto está carregando
       if (isLoading) return null;
-      if (!isAuthenticated && !isLoginPage) return AppRoutes.login;
-      if (isAuthenticated && isLoginPage) return AppRoutes.profile;
+
+      // Se não autenticado e tentando acessar página protegida → login
+      if (!isAuthenticated && !isPublicPage) return AppRoutes.login;
+
+      // Se autenticado e na tela de login → home
+      if (isAuthenticated && currentPath == AppRoutes.login) {
+        return AppRoutes.profile;
+      }
+
       return null;
     },
     routes: [

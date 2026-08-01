@@ -4,9 +4,14 @@ import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
-import '../../../core/utils/validators.dart';
-import '../../../core/utils/input_formatters.dart';
 
+/// Tela de Login — Portal do Morador
+///
+/// CORREÇÕES APLICADAS:
+/// 1. Campo de login aceita E-MAIL (não mais CPF com formatter numérico)
+/// 2. Estado inicial do authProvider é `unauthenticated` — botão sempre habilitado
+/// 3. Removido checkSession() do initState (não bloqueia mais o botão ao abrir)
+/// 4. Redirect do router não interfere mais na tela de login
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -16,40 +21,34 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _cpfController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _baseUrlController = TextEditingController();
   bool _obscurePassword = true;
   bool _showAdvanced = false;
 
   @override
-  void initState() {
-    super.initState();
-    // Verificar sessão ao abrir o app
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(authProvider.notifier).checkSession();
-    });
-  }
-
-  @override
   void dispose() {
-    _cpfController.dispose();
+    _emailController.dispose();
     _passwordController.dispose();
     _baseUrlController.dispose();
     super.dispose();
   }
 
   Future<void> _handleLogin() async {
+    // Fechar teclado antes de validar
+    FocusScope.of(context).unfocus();
+
     if (!_formKey.currentState!.validate()) return;
 
-    final cpf = _cpfController.text.replaceAll(RegExp(r'[^\d]'), '');
+    final email = _emailController.text.trim();
     final password = _passwordController.text;
     final baseUrl = _baseUrlController.text.trim().isNotEmpty
         ? _baseUrlController.text.trim()
         : null;
 
     await ref.read(authProvider.notifier).login(
-          cpf: cpf,
+          cpf: email,   // O backend aceita CPF ou e-mail no campo 'cpf'
           password: password,
           baseUrl: baseUrl,
         );
@@ -59,17 +58,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
-    // Navegar para home quando autenticado
+    // Navegar para home quando autenticado com sucesso
     ref.listen<AuthState>(authProvider, (previous, next) {
       if (next.status == AuthStatus.authenticated) {
         context.go('/home');
       }
     });
 
+    final isLoading = authState.status == AuthStatus.loading;
+
     return Scaffold(
+      // Evita que o teclado empurre o layout e quebre o scroll
+      resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
-          // Gradient background
+          // Fundo gradiente
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
@@ -80,21 +83,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             ),
           ),
 
-          // Content
+          // Conteúdo principal
           SafeArea(
-            child: Center(
+            child: GestureDetector(
+              // Fechar teclado ao tocar fora dos campos
+              onTap: () => FocusScope.of(context).unfocus(),
+              behavior: HitTestBehavior.opaque,
               child: SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 32,
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
+                    const SizedBox(height: 20),
+
                     // Logo
                     Container(
-                      width: 100,
-                      height: 100,
+                      width: 110,
+                      height: 110,
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
-                        borderRadius: BorderRadius.circular(20),
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(40),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
                       ),
                       padding: const EdgeInsets.all(12),
                       child: Image.asset(
@@ -102,20 +120,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         fit: BoxFit.contain,
                         errorBuilder: (_, __, ___) => const Icon(
                           Icons.apartment,
-                          color: Colors.white,
+                          color: AppTheme.primary,
                           size: 60,
                         ),
                       ),
                     ),
-                    const SizedBox(height: 24),
+                    const SizedBox(height: 20),
 
-                    // Title
+                    // Título
                     const Text(
                       AppConstants.appName,
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 26,
                         fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -126,14 +145,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         fontSize: 15,
                       ),
                     ),
-                    const SizedBox(height: 40),
+                    const SizedBox(height: 36),
 
-                    // Login Card
+                    // Card de login
                     Card(
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(20),
                       ),
-                      elevation: 8,
+                      elevation: 10,
+                      shadowColor: Colors.black26,
                       child: Padding(
                         padding: const EdgeInsets.all(24),
                         child: Form(
@@ -143,47 +163,81 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                             children: [
                               Text(
                                 'Entrar',
-                                style: Theme.of(context).textTheme.headlineSmall,
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .headlineSmall
+                                    ?.copyWith(fontWeight: FontWeight.w700),
                               ),
-                              const SizedBox(height: 20),
+                              const SizedBox(height: 6),
+                              Text(
+                                'Use seu e-mail ou CPF cadastrado',
+                                style: Theme.of(context)
+                                    .textTheme
+                                    .bodySmall
+                                    ?.copyWith(color: Colors.grey),
+                              ),
+                              const SizedBox(height: 24),
 
-                              // CPF Field
+                              // ── Campo E-mail / CPF ──────────────────────
                               TextFormField(
-                                controller: _cpfController,
-                                keyboardType: TextInputType.number,
-                                inputFormatters: [CpfInputFormatter()],
+                                controller: _emailController,
+                                // CORREÇÃO 1: aceita texto livre (e-mail ou CPF)
+                                keyboardType: TextInputType.emailAddress,
+                                textInputAction: TextInputAction.next,
+                                autocorrect: false,
+                                enableSuggestions: false,
                                 decoration: const InputDecoration(
-                                  labelText: 'CPF',
-                                  hintText: '000.000.000-00',
+                                  labelText: 'E-mail ou CPF',
+                                  hintText: 'seu@email.com ou 000.000.000-00',
                                   prefixIcon: Icon(Icons.person_outline),
+                                  border: OutlineInputBorder(),
                                 ),
-                                validator: Validators.validateCpf,
+                                validator: (value) {
+                                  if (value == null || value.trim().isEmpty) {
+                                    return 'Informe seu e-mail ou CPF';
+                                  }
+                                  return null;
+                                },
                               ),
                               const SizedBox(height: 16),
 
-                              // Password Field
+                              // ── Campo Senha ─────────────────────────────
                               TextFormField(
                                 controller: _passwordController,
                                 obscureText: _obscurePassword,
+                                textInputAction: TextInputAction.done,
+                                onFieldSubmitted: (_) => _handleLogin(),
                                 decoration: InputDecoration(
                                   labelText: 'Senha',
                                   prefixIcon: const Icon(Icons.lock_outline),
+                                  border: const OutlineInputBorder(),
                                   suffixIcon: IconButton(
                                     icon: Icon(
                                       _obscurePassword
-                                          ? Icons.visibility_off
-                                          : Icons.visibility,
+                                          ? Icons.visibility_off_outlined
+                                          : Icons.visibility_outlined,
                                     ),
                                     onPressed: () => setState(
                                       () => _obscurePassword = !_obscurePassword,
                                     ),
+                                    tooltip: _obscurePassword
+                                        ? 'Mostrar senha'
+                                        : 'Ocultar senha',
                                   ),
                                 ),
-                                validator: Validators.validatePassword,
+                                validator: (value) {
+                                  if (value == null || value.isEmpty) {
+                                    return 'Informe sua senha';
+                                  }
+                                  if (value.length < 4) {
+                                    return 'Senha muito curta';
+                                  }
+                                  return null;
+                                },
                               ),
                               const SizedBox(height: 8),
 
-                              // Forgot Password
+                              // Esqueci a senha
                               Align(
                                 alignment: Alignment.centerRight,
                                 child: TextButton(
@@ -193,31 +247,40 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                 ),
                               ),
 
-                              // Advanced Settings (Multi-Tenant URL)
-                              GestureDetector(
+                              // Configurações avançadas (URL multi-tenant)
+                              InkWell(
                                 onTap: () => setState(
                                   () => _showAdvanced = !_showAdvanced,
                                 ),
-                                child: Row(
-                                  children: [
-                                    Icon(
-                                      _showAdvanced
-                                          ? Icons.expand_less
-                                          : Icons.expand_more,
-                                      size: 18,
-                                      color: Colors.grey,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    const Text(
-                                      'Configurações avançadas',
-                                      style: TextStyle(
-                                        fontSize: 12,
+                                borderRadius: BorderRadius.circular(8),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 4,
+                                    horizontal: 2,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        _showAdvanced
+                                            ? Icons.expand_less
+                                            : Icons.expand_more,
+                                        size: 18,
                                         color: Colors.grey,
                                       ),
-                                    ),
-                                  ],
+                                      const SizedBox(width: 4),
+                                      const Text(
+                                        'Configurações avançadas',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
+
                               if (_showAdvanced) ...[
                                 const SizedBox(height: 12),
                                 TextFormField(
@@ -225,25 +288,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   keyboardType: TextInputType.url,
                                   decoration: const InputDecoration(
                                     labelText: 'URL do Condomínio',
-                                    hintText: 'https://meucondominio.erpcondominios.com.br',
+                                    hintText:
+                                        'https://meucondominio.erpcondominios.com.br',
                                     prefixIcon: Icon(Icons.link),
-                                    helperText: 'Deixe em branco para usar o padrão',
+                                    helperText:
+                                        'Deixe em branco para usar o padrão',
+                                    border: OutlineInputBorder(),
                                   ),
                                 ),
                               ],
                               const SizedBox(height: 24),
 
-                              // Error Message
+                              // Mensagem de erro
                               if (authState.status == AuthStatus.error &&
-                                  authState.errorMessage != null)
+                                  authState.errorMessage != null) ...[
                                 Container(
                                   padding: const EdgeInsets.all(12),
-                                  margin: const EdgeInsets.only(bottom: 16),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.danger.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(8),
+                                    color: AppTheme.danger.withAlpha(25),
+                                    borderRadius: BorderRadius.circular(10),
                                     border: Border.all(
-                                      color: AppTheme.danger.withOpacity(0.3),
+                                      color: AppTheme.danger.withAlpha(80),
                                     ),
                                   ),
                                   child: Row(
@@ -266,22 +331,41 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                     ],
                                   ),
                                 ),
+                                const SizedBox(height: 16),
+                              ],
 
-                              // Login Button
-                              ElevatedButton(
-                                onPressed: authState.isLoading
-                                    ? null
-                                    : _handleLogin,
-                                child: authState.isLoading
-                                    ? const SizedBox(
-                                        height: 20,
-                                        width: 20,
-                                        child: CircularProgressIndicator(
-                                          strokeWidth: 2,
-                                          color: Colors.white,
+                              // ── Botão Entrar ────────────────────────────
+                              // CORREÇÃO 2: botão SEMPRE habilitado quando
+                              // não está carregando (não depende de authState.initial)
+                              SizedBox(
+                                height: 52,
+                                child: ElevatedButton(
+                                  onPressed: isLoading ? null : _handleLogin,
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: AppTheme.primary,
+                                    foregroundColor: Colors.white,
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    elevation: 2,
+                                  ),
+                                  child: isLoading
+                                      ? const SizedBox(
+                                          height: 22,
+                                          width: 22,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.5,
+                                            color: Colors.white,
+                                          ),
+                                        )
+                                      : const Text(
+                                          'Entrar',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
-                                      )
-                                    : const Text('Entrar'),
+                                ),
                               ),
                             ],
                           ),
@@ -297,6 +381,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                         fontSize: 12,
                       ),
                     ),
+                    const SizedBox(height: 16),
                   ],
                 ),
               ),

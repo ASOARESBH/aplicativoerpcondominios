@@ -284,7 +284,7 @@ class _NewTicketSheetState extends State<_NewTicketSheet> {
               const SizedBox(height: 12),
               if (widget.subjects.isNotEmpty)
                 DropdownButtonFormField<int>(
-                  initialValue: _selectedSubjectId,
+                  value: _selectedSubjectId,
                   decoration: const InputDecoration(labelText: 'Assunto'),
                   items: widget.subjects.map((s) => DropdownMenuItem<int>(value: int.tryParse(s['id'].toString()), child: Text('${s['nome']}${s['departamento'] != null ? ' — ${s['departamento']}' : ''}'))).toList(),
                   onChanged: (v) => setState(() => _selectedSubjectId = v),

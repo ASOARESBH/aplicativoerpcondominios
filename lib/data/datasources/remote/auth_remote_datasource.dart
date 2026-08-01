@@ -23,13 +23,14 @@ class AuthRemoteDataSource {
         await _dioClient.initBaseUrl();
       }
 
+      // Detecta se o valor informado é e-mail ou CPF
+      final isEmail = cpf.contains('@');
       final response = await _dioClient.dio.post(
         AppConstants.endpointLogin,
         queryParameters: {'action': 'login'},
-        data: {
-          'cpf': cpf,
-          'senha': password,
-        },
+        data: isEmail
+            ? {'email': cpf, 'senha': password}
+            : {'cpf': cpf.replaceAll(RegExp(r'[^\d]'), ''), 'senha': password},
       );
 
       final loginResponse = LoginResponseModel.fromJson(

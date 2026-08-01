@@ -64,7 +64,8 @@ class AuthState {
 class AuthNotifier extends StateNotifier<AuthState> {
   final AuthRepository _repository;
 
-  AuthNotifier(this._repository) : super(const AuthState());
+  AuthNotifier(this._repository)
+      : super(const AuthState(status: AuthStatus.unauthenticated));
 
   /// Verifica sessão local ao iniciar o app
   Future<void> checkSession() async {
