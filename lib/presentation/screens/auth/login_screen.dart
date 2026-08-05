@@ -170,7 +170,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                               const SizedBox(height: 6),
                               Text(
-                                'Use seu e-mail ou CPF cadastrado',
+                                'Use seu CPF e senha cadastrados',
                                 style: Theme.of(context)
                                     .textTheme
                                     .bodySmall
@@ -178,23 +178,27 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                               ),
                               const SizedBox(height: 24),
 
-                              // ── Campo E-mail / CPF ──────────────────────
+                              // ── Campo CPF ──────────────────────────────
+                              // O backend só aceita CPF no login
                               TextFormField(
                                 controller: _emailController,
-                                // CORREÇÃO 1: aceita texto livre (e-mail ou CPF)
-                                keyboardType: TextInputType.emailAddress,
+                                keyboardType: TextInputType.number,
                                 textInputAction: TextInputAction.next,
                                 autocorrect: false,
                                 enableSuggestions: false,
                                 decoration: const InputDecoration(
-                                  labelText: 'E-mail ou CPF',
-                                  hintText: 'seu@email.com ou 000.000.000-00',
+                                  labelText: 'CPF',
+                                  hintText: '000.000.000-00',
                                   prefixIcon: Icon(Icons.person_outline),
                                   border: OutlineInputBorder(),
                                 ),
                                 validator: (value) {
                                   if (value == null || value.trim().isEmpty) {
-                                    return 'Informe seu e-mail ou CPF';
+                                    return 'Informe seu CPF';
+                                  }
+                                  final digits = value.replaceAll(RegExp(r'[^\d]'), '');
+                                  if (digits.length != 11) {
+                                    return 'CPF deve ter 11 dígitos';
                                   }
                                   return null;
                                 },

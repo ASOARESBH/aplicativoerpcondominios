@@ -78,7 +78,11 @@ class LoginResponseModel {
       mensagem: json['mensagem']?.toString() ?? '',
       token: dados?['token']?.toString() ?? json['token']?.toString(),
       moradorId: _parseInt(dados?['morador_id'] ?? json['morador_id']),
-      nome: dados?['nome']?.toString() ?? json['nome']?.toString(),
+      // API retorna 'morador_nome' (não 'nome') dentro de dados
+      nome: dados?['morador_nome']?.toString()
+          ?? dados?['nome']?.toString()
+          ?? json['morador_nome']?.toString()
+          ?? json['nome']?.toString(),
       unidade: dados?['unidade']?.toString() ?? json['unidade']?.toString(),
       email: dados?['email']?.toString() ?? json['email']?.toString(),
       senhaTemporaria: dados?['senha_temporaria'] == 1 ||
