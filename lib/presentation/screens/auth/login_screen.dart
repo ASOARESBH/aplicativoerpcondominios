@@ -196,17 +196,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   keyboardType: TextInputType.number,
                                   textInputAction: TextInputAction.next,
                                   autocorrect: false,
+                                  // Garante texto visível em qualquer tema
+                                  style: const TextStyle(
+                                    color: Colors.black87,
+                                    fontSize: 16,
+                                    letterSpacing: 1.5,
+                                  ),
+                                  cursorColor: AppTheme.primary,
                                   decoration: InputDecoration(
                                     labelText: 'CPF',
+                                    labelStyle: const TextStyle(color: Colors.black54),
                                     hintText: '000.000.000-00',
+                                    hintStyle: const TextStyle(color: Colors.black38),
                                     prefixIcon: const Icon(
                                       Icons.person_outline_rounded,
+                                      color: Colors.black54,
                                     ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Colors.black26),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Colors.black26),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: AppTheme.primary, width: 2),
                                     ),
                                     filled: true,
-                                    fillColor: Colors.grey.shade50,
+                                    fillColor: Colors.white,
                                   ),
                                   validator: (v) {
                                     if (v == null || v.trim().isEmpty) {
@@ -230,21 +249,39 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   obscureText: _obscureSenha,
                                   textInputAction: TextInputAction.done,
                                   onFieldSubmitted: (_) => _handleLogin(),
+                                  // Garante texto visível em qualquer tema
+                                  style: const TextStyle(
+                                    color: Colors.black87,
+                                    fontSize: 16,
+                                  ),
+                                  cursorColor: AppTheme.primary,
                                   decoration: InputDecoration(
                                     labelText: 'Senha',
+                                    labelStyle: const TextStyle(color: Colors.black54),
                                     prefixIcon: const Icon(
                                       Icons.lock_outline_rounded,
+                                      color: Colors.black54,
                                     ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Colors.black26),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: Colors.black26),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: BorderSide(color: AppTheme.primary, width: 2),
                                     ),
                                     filled: true,
-                                    fillColor: Colors.grey.shade50,
+                                    fillColor: Colors.white,
                                     suffixIcon: IconButton(
                                       icon: Icon(
                                         _obscureSenha
                                             ? Icons.visibility_off_outlined
                                             : Icons.visibility_outlined,
+                                        color: Colors.black54,
                                       ),
                                       onPressed: () => setState(
                                         () => _obscureSenha = !_obscureSenha,
