@@ -29,11 +29,10 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
     setState(() => _loading = true);
     try {
       final dioClient = ref.read(dioClientProvider);
-      await dioClient.initBaseUrl();
       final params = <String, String>{'acao': 'documentos_listar'};
       if (_search.isNotEmpty) params['busca'] = _search;
       if (_typeFilter.isNotEmpty) params['tipo'] = _typeFilter;
-      final response = await dioClient.dio.get(AppConstants.endpointDocuments, queryParameters: params);
+      final response = await dioClient.dio.get(AppConstants.endpointDocumentos, queryParameters: params);
       final data = response.data as Map<String, dynamic>;
       if (data['sucesso'] == true) {
         final dados = data['dados'];
@@ -69,10 +68,9 @@ class _DocumentsScreenState extends ConsumerState<DocumentsScreen> {
   Future<void> _openDocument(Map<String, dynamic> doc) async {
     try {
       final dioClient = ref.read(dioClientProvider);
-      await dioClient.initBaseUrl();
-      final baseUrl = await ref.read(secureStorageProvider).getBaseUrl();
+      final baseUrl = AppConstants.baseUrl;
       final id = doc['id'];
-      final url = '$baseUrl${AppConstants.endpointDocuments}?acao=download&id=$id';
+      final url = '$baseUrl${AppConstants.endpointDocumentos}?acao=download&id=$id';
       final token = await ref.read(secureStorageProvider).getAuthToken();
       // Try to open with URL launcher (authenticated URL)
       final uri = Uri.parse('$url&token=$token');

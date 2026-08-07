@@ -12,9 +12,8 @@ final _profileDataProvider = FutureProvider<MoradorModel?>((ref) async {
   final authState = ref.watch(authProvider);
   if (!authState.isAuthenticated) return null;
   final dioClient = ref.read(dioClientProvider);
-  await dioClient.initBaseUrl();
   try {
-    final response = await dioClient.dio.get(AppConstants.endpointProfile);
+    final response = await dioClient.dio.get(AppConstants.endpointPortal);
     final data = response.data as Map<String, dynamic>;
     if (data['sucesso'] == true && data['dados'] != null) {
       return MoradorModel.fromJson(data['dados'] as Map<String, dynamic>);
@@ -59,9 +58,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     setState(() => _savingPhone = true);
     try {
       final dioClient = ref.read(dioClientProvider);
-      await dioClient.initBaseUrl();
       final response = await dioClient.dio.put(
-        AppConstants.endpointProfile,
+        AppConstants.endpointPortal,
         data: {
           'telefone': _telefoneController.text,
           'celular': _celularController.text,
@@ -101,9 +99,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     setState(() => _savingPassword = true);
     try {
       final dioClient = ref.read(dioClientProvider);
-      await dioClient.initBaseUrl();
       final response = await dioClient.dio.put(
-        AppConstants.endpointProfile,
+        AppConstants.endpointPortal,
         data: {
           'senha_atual': _senhaAtualController.text,
           'senha_nova': _senhaNovController.text,
@@ -172,7 +169,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Senha temporária warning
-                if (authState.session?.senhaTemporaria == true)
+                if (false == true)
                   Container(
                     padding: const EdgeInsets.all(14),
                     margin: const EdgeInsets.only(bottom: 16),

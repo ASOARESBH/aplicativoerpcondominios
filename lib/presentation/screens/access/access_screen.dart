@@ -47,13 +47,12 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
     setState(() => _loadingList = true);
     try {
       final dioClient = ref.read(dioClientProvider);
-      await dioClient.initBaseUrl();
       final authState = ref.read(authProvider);
       final moradorId = authState.session?.moradorId;
 
       final results = await Future.wait([
-        dioClient.dio.get(AppConstants.endpointVisitors),
-        dioClient.dio.get('${AppConstants.endpointAccess}?morador_id=$moradorId'),
+        dioClient.dio.get(AppConstants.endpointPortal),
+        dioClient.dio.get('${AppConstants.endpointAcessos}?morador_id=$moradorId'),
       ]);
 
       final visitorsData = results[0].data as Map<String, dynamic>;
@@ -88,11 +87,10 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
     setState(() => _submitting = true);
     try {
       final dioClient = ref.read(dioClientProvider);
-      await dioClient.initBaseUrl();
       final authState = ref.read(authProvider);
 
       final response = await dioClient.dio.post(
-        AppConstants.endpointAccess,
+        AppConstants.endpointAcessos,
         data: {
           'visitante_id': _selectedVisitorId,
           'tipo_visitante': _tipoVisitante,
@@ -144,8 +142,7 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
   Future<void> _showQrCode(int accessId) async {
     try {
       final dioClient = ref.read(dioClientProvider);
-      await dioClient.initBaseUrl();
-      final baseUrl = await ref.read(secureStorageProvider).getBaseUrl();
+      final baseUrl = AppConstants.baseUrl;
       final qrUrl = '$baseUrl/api/api_acessos_visitantes.php?action=gerar_qrcode&id=$accessId';
 
       showDialog(
@@ -202,8 +199,7 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
     if (confirm != true) return;
     try {
       final dioClient = ref.read(dioClientProvider);
-      await dioClient.initBaseUrl();
-      final response = await dioClient.dio.delete('${AppConstants.endpointAccess}?id=$id');
+      final response = await dioClient.dio.delete('${AppConstants.endpointAcessos}?id=$id');
       final data = response.data as Map<String, dynamic>;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

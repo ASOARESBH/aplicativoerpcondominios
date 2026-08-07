@@ -23,9 +23,8 @@ class _ProtocolsScreenState extends ConsumerState<ProtocolsScreen> {
     setState(() => _loading = true);
     try {
       final dioClient = ref.read(dioClientProvider);
-      await dioClient.initBaseUrl();
       final statusParam = _filter.isNotEmpty ? '?status=$_filter' : '';
-      final response = await dioClient.dio.get('${AppConstants.endpointProtocols}$statusParam');
+      final response = await dioClient.dio.get('${AppConstants.endpointProtocolos}$statusParam');
       final data = response.data as Map<String, dynamic>;
       if (data['sucesso'] == true) {
         setState(() => _protocols = List<Map<String, dynamic>>.from(data['dados'] ?? []));

@@ -31,11 +31,10 @@ class _TicketsScreenState extends ConsumerState<TicketsScreen> {
     setState(() => _loading = true);
     try {
       final dioClient = ref.read(dioClientProvider);
-      await dioClient.initBaseUrl();
       final statusParam = _statusFilter.isNotEmpty ? '&status=$_statusFilter' : '';
       final results = await Future.wait([
-        dioClient.dio.get('${AppConstants.endpointTickets}?action=listar_assuntos'),
-        dioClient.dio.get('${AppConstants.endpointTickets}?action=listar&pagina=$_page$statusParam'),
+        dioClient.dio.get('${AppConstants.endpointOS}?action=listar_assuntos'),
+        dioClient.dio.get('${AppConstants.endpointOS}?action=listar&pagina=$_page$statusParam'),
       ]);
       final subjectsData = results[0].data as Map<String, dynamic>;
       final ticketsData = results[1].data as Map<String, dynamic>;
@@ -251,7 +250,7 @@ class _NewTicketSheetState extends State<_NewTicketSheet> {
     try {
       await widget.dioClient.initBaseUrl();
       final response = await widget.dioClient.dio.post(
-        '${AppConstants.endpointTickets}?action=abrir',
+        '${AppConstants.endpointOS}?action=abrir',
         data: {'titulo': _tituloController.text, 'assunto_id': _selectedSubjectId, 'descricao': _descricaoController.text},
       );
       final data = response.data as Map<String, dynamic>;
@@ -325,7 +324,7 @@ class _TicketDetailSheetState extends State<_TicketDetailSheet> {
     try {
       await widget.dioClient.initBaseUrl();
       final id = widget.ticket['id'];
-      final response = await widget.dioClient.dio.get('${AppConstants.endpointTickets}?action=detalhe&id=$id');
+      final response = await widget.dioClient.dio.get('${AppConstants.endpointOS}?action=detalhe&id=$id');
       final data = response.data as Map<String, dynamic>;
       if (data['sucesso'] == true) {
         final dados = data['dados'] as Map<String, dynamic>?;

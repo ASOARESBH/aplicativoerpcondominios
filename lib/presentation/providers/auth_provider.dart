@@ -30,7 +30,7 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 
 // ─── Auth State ───────────────────────────────────────────────────────────────
 
-enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
+enum AuthStatus { loading, authenticated, unauthenticated, error }
 
 class AuthState {
   final AuthStatus status;
@@ -38,7 +38,7 @@ class AuthState {
   final String? errorMessage;
 
   const AuthState({
-    this.status = AuthStatus.initial,
+    this.status = AuthStatus.unauthenticated,
     this.session,
     this.errorMessage,
   });
@@ -49,14 +49,14 @@ class AuthState {
     String? errorMessage,
   }) {
     return AuthState(
-      status: status ?? this.status,
-      session: session ?? this.session,
-      errorMessage: errorMessage ?? this.errorMessage,
+      status:       status ?? this.status,
+      session:      session ?? this.session,
+      errorMessage: errorMessage,
     );
   }
 
   bool get isAuthenticated => status == AuthStatus.authenticated;
-  bool get isLoading => status == AuthStatus.loading;
+  bool get isLoading       => status == AuthStatus.loading;
 }
 
 // ─── Auth Notifier ────────────────────────────────────────────────────────────
@@ -67,7 +67,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
   AuthNotifier(this._repository)
       : super(const AuthState(status: AuthStatus.unauthenticated));
 
-  /// Verifica sessão local ao iniciar o app
+  /// Verifica sessão local ao iniciar o app (chamado pela SplashScreen).
   Future<void> checkSession() async {
     state = state.copyWith(status: AuthStatus.loading);
     try {
@@ -80,7 +80,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final isValid = await _repository.verifySession();
       if (isValid) {
         state = state.copyWith(
-          status: AuthStatus.authenticated,
+          status:  AuthStatus.authenticated,
           session: localSession,
         );
       } else {
@@ -92,32 +92,31 @@ class AuthNotifier extends StateNotifier<AuthState> {
     }
   }
 
-  /// Realiza o login
+  /// Realiza o login com CPF e senha.
+  /// URL base FIXA — não aceita mais parâmetro baseUrl.
   Future<void> login({
     required String cpf,
     required String password,
-    String? baseUrl,
   }) async {
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
     try {
       final session = await _repository.login(
-        cpf: cpf,
+        cpf:      cpf,
         password: password,
-        baseUrl: baseUrl,
       );
       state = state.copyWith(
-        status: AuthStatus.authenticated,
+        status:  AuthStatus.authenticated,
         session: session,
       );
     } catch (e) {
       state = state.copyWith(
-        status: AuthStatus.error,
+        status:       AuthStatus.error,
         errorMessage: e.toString().replaceAll('Exception: ', ''),
       );
     }
   }
 
-  /// Realiza o logout
+  /// Realiza o logout.
   Future<void> logout() async {
     await _repository.logout();
     state = const AuthState(status: AuthStatus.unauthenticated);

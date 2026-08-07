@@ -4,7 +4,8 @@ import '../../domain/entities/morador_entity.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/remote/auth_remote_datasource.dart';
 
-/// Implementação do repositório de autenticação
+/// Implementação do repositório de autenticação.
+/// URL base FIXA — multi-tenant por token, não por URL.
 class AuthRepositoryImpl implements AuthRepository {
   final AuthRemoteDataSource _remoteDataSource;
   final SecureStorageService _secureStorage;
@@ -15,35 +16,31 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<MoradorSessionEntity> login({
     required String cpf,
     required String password,
-    String? baseUrl,
   }) async {
     final loginResponse = await _remoteDataSource.login(
       cpf: cpf,
       password: password,
-      baseUrl: baseUrl,
     );
 
     if (loginResponse.token == null || loginResponse.moradorId == null) {
-      throw const ValidationException('Dados de sessão inválidos.');
+      throw const ValidationException('Dados de sessão inválidos retornados pelo servidor.');
     }
 
-    // Salva token no armazenamento seguro
+    // Persiste token e dados do morador no armazenamento seguro
     await _secureStorage.saveAuthToken(loginResponse.token!);
     await _secureStorage.saveMoradorData(
       moradorId: loginResponse.moradorId.toString(),
-      nome: loginResponse.nome ?? '',
-      unidade: loginResponse.unidade ?? '',
-      email: loginResponse.email ?? '',
-      senhaTemporaria: loginResponse.senhaTemporaria,
+      nome:      loginResponse.nome ?? '',
+      unidade:   loginResponse.unidade ?? '',
+      email:     loginResponse.email,
     );
 
     return MoradorSessionEntity(
-      token: loginResponse.token!,
+      token:     loginResponse.token!,
       moradorId: loginResponse.moradorId!,
-      nome: loginResponse.nome ?? '',
-      unidade: loginResponse.unidade ?? '',
-      email: loginResponse.email,
-      senhaTemporaria: loginResponse.senhaTemporaria,
+      nome:      loginResponse.nome ?? '',
+      unidade:   loginResponse.unidade ?? '',
+      email:     loginResponse.email,
     );
   }
 
@@ -73,13 +70,11 @@ class AuthRepositoryImpl implements AuthRepository {
     if (moradorId == null) return null;
 
     return MoradorSessionEntity(
-      token: token,
+      token:     token,
       moradorId: moradorId,
-      nome: data['nome'] ?? '',
-      unidade: data['unidade'] ?? '',
-      email: data['email'],
-      tenantId: data['tenantId'],
-      senhaTemporaria: data['senhaTemporaria'] == '1',
+      nome:      data['nome'] ?? '',
+      unidade:   data['unidade'] ?? '',
+      email:     data['email'],
     );
   }
 

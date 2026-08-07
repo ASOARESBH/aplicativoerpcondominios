@@ -46,8 +46,7 @@ class _DependentsScreenState extends ConsumerState<DependentsScreen> {
     setState(() => _loadingList = true);
     try {
       final dioClient = ref.read(dioClientProvider);
-      await dioClient.initBaseUrl();
-      final response = await dioClient.dio.get('${AppConstants.endpointDependents}?action=listar');
+      final response = await dioClient.dio.get('${AppConstants.endpointDependentes}?action=listar');
       final data = response.data as Map<String, dynamic>;
       if (data['sucesso'] == true) {
         setState(() => _dependents = List<Map<String, dynamic>>.from(data['dados'] ?? []));
@@ -64,9 +63,8 @@ class _DependentsScreenState extends ConsumerState<DependentsScreen> {
     setState(() => _submitting = true);
     try {
       final dioClient = ref.read(dioClientProvider);
-      await dioClient.initBaseUrl();
       final response = await dioClient.dio.post(
-        '${AppConstants.endpointDependents}?action=criar',
+        '${AppConstants.endpointDependentes}?action=criar',
         data: {
           'nome_completo': _nomeController.text,
           'parentesco': _parentesco,
@@ -126,8 +124,7 @@ class _DependentsScreenState extends ConsumerState<DependentsScreen> {
     if (confirm != true) return;
     try {
       final dioClient = ref.read(dioClientProvider);
-      await dioClient.initBaseUrl();
-      final response = await dioClient.dio.delete('${AppConstants.endpointDependents}?action=excluir&id=$id');
+      final response = await dioClient.dio.delete('${AppConstants.endpointDependentes}?action=excluir&id=$id');
       final data = response.data as Map<String, dynamic>;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

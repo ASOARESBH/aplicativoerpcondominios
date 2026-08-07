@@ -28,8 +28,7 @@ class _WaterMeterScreenState extends ConsumerState<WaterMeterScreen> {
     setState(() => _loading = true);
     try {
       final dioClient = ref.read(dioClientProvider);
-      await dioClient.initBaseUrl();
-      final response = await dioClient.dio.get(AppConstants.endpointHydrometer);
+      final response = await dioClient.dio.get(AppConstants.endpointHidrometro);
       final data = response.data as Map<String, dynamic>;
       if (data['sucesso'] == true && data['dados'] != null) {
         final dados = data['dados'] as Map<String, dynamic>;

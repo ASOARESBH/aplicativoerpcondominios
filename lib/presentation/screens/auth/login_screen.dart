@@ -5,13 +5,12 @@ import '../../providers/auth_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 
-/// Tela de Login — Portal do Morador
+/// Tela de Login — Portal do Morador ERP Condomínios
 ///
-/// CORREÇÕES APLICADAS:
-/// 1. Campo de login aceita E-MAIL (não mais CPF com formatter numérico)
-/// 2. Estado inicial do authProvider é `unauthenticated` — botão sempre habilitado
-/// 3. Removido checkSession() do initState (não bloqueia mais o botão ao abrir)
-/// 4. Redirect do router não interfere mais na tela de login
+/// MULTI-TENANT: URL FIXA https://app.erpcondominios.com.br/
+/// Todos os condomínios usam a mesma URL.
+/// O tenant é identificado pelo token Bearer gerado no login.
+/// NÃO há campo de URL customizada nesta tela.
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
 
@@ -19,38 +18,47 @@ class LoginScreen extends ConsumerStatefulWidget {
   ConsumerState<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends ConsumerState<LoginScreen> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _baseUrlController = TextEditingController();
-  bool _obscurePassword = true;
-  bool _showAdvanced = false;
+class _LoginScreenState extends ConsumerState<LoginScreen>
+    with SingleTickerProviderStateMixin {
+  final _formKey         = GlobalKey<FormState>();
+  final _cpfController   = TextEditingController();
+  final _senhaController = TextEditingController();
+  bool _obscureSenha     = true;
+  late AnimationController _animController;
+  late Animation<double> _fadeAnim;
+
+  @override
+  void initState() {
+    super.initState();
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _fadeAnim = CurvedAnimation(
+      parent: _animController,
+      curve: Curves.easeIn,
+    );
+    _animController.forward();
+  }
 
   @override
   void dispose() {
-    _emailController.dispose();
-    _passwordController.dispose();
-    _baseUrlController.dispose();
+    _cpfController.dispose();
+    _senhaController.dispose();
+    _animController.dispose();
     super.dispose();
   }
 
   Future<void> _handleLogin() async {
-    // Fechar teclado antes de validar
     FocusScope.of(context).unfocus();
-
     if (!_formKey.currentState!.validate()) return;
 
-    final email = _emailController.text.trim();
-    final password = _passwordController.text;
-    final baseUrl = _baseUrlController.text.trim().isNotEmpty
-        ? _baseUrlController.text.trim()
-        : null;
+    final cpf   = _cpfController.text.trim();
+    final senha = _senhaController.text;
 
     await ref.read(authProvider.notifier).login(
-          cpf: email,   // O backend aceita CPF ou e-mail no campo 'cpf'
-          password: password,
-          baseUrl: baseUrl,
+          cpf:      cpf,
+          password: senha,
         );
   }
 
@@ -58,17 +66,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
 
-    // Navegar para home quando autenticado com sucesso
-    ref.listen<AuthState>(authProvider, (previous, next) {
+    // Navegar para home ao autenticar
+    ref.listen<AuthState>(authProvider, (_, next) {
       if (next.status == AuthStatus.authenticated) {
         context.go('/home');
       }
     });
 
-    final isLoading = authState.status == AuthStatus.loading;
+    final isLoading = authState.isLoading;
 
     return Scaffold(
-      // Evita que o teclado empurre o layout e quebre o scroll
       resizeToAvoidBottomInset: true,
       body: Stack(
         children: [
@@ -76,317 +83,296 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
           Container(
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+                begin: Alignment.topCenter,
+                end:   Alignment.bottomCenter,
                 colors: [AppTheme.primary, AppTheme.primaryDark],
               ),
             ),
           ),
 
-          // Conteúdo principal
+          // Conteúdo
           SafeArea(
             child: GestureDetector(
-              // Fechar teclado ao tocar fora dos campos
               onTap: () => FocusScope.of(context).unfocus(),
               behavior: HitTestBehavior.opaque,
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 32,
-                ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 20),
+              child: FadeTransition(
+                opacity: _fadeAnim,
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 28,
+                    vertical: 24,
+                  ),
+                  child: Column(
+                    children: [
+                      const SizedBox(height: 32),
 
-                    // Logo
-                    Container(
-                      width: 110,
-                      height: 110,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha(40),
-                            blurRadius: 20,
-                            offset: const Offset(0, 8),
+                      // ── Logo ──────────────────────────────────────────
+                      Container(
+                        width: 120,
+                        height: 120,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(28),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withAlpha(50),
+                              blurRadius: 24,
+                              offset: const Offset(0, 10),
+                            ),
+                          ],
+                        ),
+                        padding: const EdgeInsets.all(14),
+                        child: Image.asset(
+                          'assets/images/logo.png',
+                          fit: BoxFit.contain,
+                          errorBuilder: (_, __, ___) => const Icon(
+                            Icons.apartment_rounded,
+                            color: AppTheme.primary,
+                            size: 64,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+
+                      // ── Título ────────────────────────────────────────
+                      const Text(
+                        AppConstants.appName,
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 28,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      const Text(
+                        'Portal do Morador',
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 15,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 40),
+
+                      // ── Card de Login ─────────────────────────────────
+                      Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        elevation: 12,
+                        shadowColor: Colors.black26,
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+                          child: Form(
+                            key: _formKey,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                // Cabeçalho do card
+                                Text(
+                                  'Entrar',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .headlineSmall
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.w800,
+                                        color: AppTheme.primaryDark,
+                                      ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Informe seu CPF e senha',
+                                  style: Theme.of(context)
+                                      .textTheme
+                                      .bodySmall
+                                      ?.copyWith(color: Colors.grey.shade600),
+                                ),
+                                const SizedBox(height: 24),
+
+                                // ── Campo CPF ─────────────────────────
+                                TextFormField(
+                                  controller: _cpfController,
+                                  keyboardType: TextInputType.number,
+                                  textInputAction: TextInputAction.next,
+                                  autocorrect: false,
+                                  decoration: InputDecoration(
+                                    labelText: 'CPF',
+                                    hintText: '000.000.000-00',
+                                    prefixIcon: const Icon(
+                                      Icons.person_outline_rounded,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.grey.shade50,
+                                  ),
+                                  validator: (v) {
+                                    if (v == null || v.trim().isEmpty) {
+                                      return 'Informe seu CPF';
+                                    }
+                                    final digits = v.replaceAll(
+                                      RegExp(r'[^\d]'),
+                                      '',
+                                    );
+                                    if (digits.length != 11) {
+                                      return 'CPF deve ter 11 dígitos';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                                const SizedBox(height: 16),
+
+                                // ── Campo Senha ───────────────────────
+                                TextFormField(
+                                  controller: _senhaController,
+                                  obscureText: _obscureSenha,
+                                  textInputAction: TextInputAction.done,
+                                  onFieldSubmitted: (_) => _handleLogin(),
+                                  decoration: InputDecoration(
+                                    labelText: 'Senha',
+                                    prefixIcon: const Icon(
+                                      Icons.lock_outline_rounded,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    filled: true,
+                                    fillColor: Colors.grey.shade50,
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _obscureSenha
+                                            ? Icons.visibility_off_outlined
+                                            : Icons.visibility_outlined,
+                                      ),
+                                      onPressed: () => setState(
+                                        () => _obscureSenha = !_obscureSenha,
+                                      ),
+                                      tooltip: _obscureSenha
+                                          ? 'Mostrar senha'
+                                          : 'Ocultar senha',
+                                    ),
+                                  ),
+                                  validator: (v) {
+                                    if (v == null || v.isEmpty) {
+                                      return 'Informe sua senha';
+                                    }
+                                    if (v.length < 4) {
+                                      return 'Senha muito curta';
+                                    }
+                                    return null;
+                                  },
+                                ),
+
+                                // Esqueci a senha
+                                Align(
+                                  alignment: Alignment.centerRight,
+                                  child: TextButton(
+                                    onPressed: () =>
+                                        context.push('/forgot-password'),
+                                    child: const Text('Esqueci minha senha'),
+                                  ),
+                                ),
+                                const SizedBox(height: 8),
+
+                                // ── Mensagem de erro ──────────────────
+                                if (authState.status == AuthStatus.error &&
+                                    authState.errorMessage != null) ...[
+                                  Container(
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: AppTheme.danger.withAlpha(20),
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: AppTheme.danger.withAlpha(80),
+                                      ),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(
+                                          Icons.error_outline_rounded,
+                                          color: AppTheme.danger,
+                                          size: 18,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            authState.errorMessage!,
+                                            style: const TextStyle(
+                                              color: AppTheme.danger,
+                                              fontSize: 13,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+
+                                // ── Botão Entrar ──────────────────────
+                                SizedBox(
+                                  height: 54,
+                                  child: ElevatedButton(
+                                    onPressed: isLoading ? null : _handleLogin,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AppTheme.primary,
+                                      foregroundColor: Colors.white,
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(14),
+                                      ),
+                                      elevation: 3,
+                                    ),
+                                    child: isLoading
+                                        ? const SizedBox(
+                                            height: 24,
+                                            width: 24,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2.5,
+                                              color: Colors.white,
+                                            ),
+                                          )
+                                        : const Text(
+                                            'Entrar',
+                                            style: TextStyle(
+                                              fontSize: 17,
+                                              fontWeight: FontWeight.w700,
+                                            ),
+                                          ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 28),
+
+                      // Rodapé com versão e URL do sistema
+                      Column(
+                        children: [
+                          Text(
+                            'v${AppConstants.appVersion}',
+                            style: const TextStyle(
+                              color: Colors.white54,
+                              fontSize: 12,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'app.erpcondominios.com.br',
+                            style: TextStyle(
+                              color: Colors.white38,
+                              fontSize: 11,
+                            ),
                           ),
                         ],
                       ),
-                      padding: const EdgeInsets.all(12),
-                      child: Image.asset(
-                        'assets/images/logo.png',
-                        fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => const Icon(
-                          Icons.apartment,
-                          color: AppTheme.primary,
-                          size: 60,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-
-                    // Título
-                    const Text(
-                      AppConstants.appName,
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.5,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    const Text(
-                      'Portal do Morador',
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 15,
-                      ),
-                    ),
-                    const SizedBox(height: 36),
-
-                    // Card de login
-                    Card(
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      elevation: 10,
-                      shadowColor: Colors.black26,
-                      child: Padding(
-                        padding: const EdgeInsets.all(24),
-                        child: Form(
-                          key: _formKey,
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.stretch,
-                            children: [
-                              Text(
-                                'Entrar',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .headlineSmall
-                                    ?.copyWith(fontWeight: FontWeight.w700),
-                              ),
-                              const SizedBox(height: 6),
-                              Text(
-                                'Use seu CPF e senha cadastrados',
-                                style: Theme.of(context)
-                                    .textTheme
-                                    .bodySmall
-                                    ?.copyWith(color: Colors.grey),
-                              ),
-                              const SizedBox(height: 24),
-
-                              // ── Campo CPF ──────────────────────────────
-                              // O backend só aceita CPF no login
-                              TextFormField(
-                                controller: _emailController,
-                                keyboardType: TextInputType.number,
-                                textInputAction: TextInputAction.next,
-                                autocorrect: false,
-                                enableSuggestions: false,
-                                decoration: const InputDecoration(
-                                  labelText: 'CPF',
-                                  hintText: '000.000.000-00',
-                                  prefixIcon: Icon(Icons.person_outline),
-                                  border: OutlineInputBorder(),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.trim().isEmpty) {
-                                    return 'Informe seu CPF';
-                                  }
-                                  final digits = value.replaceAll(RegExp(r'[^\d]'), '');
-                                  if (digits.length != 11) {
-                                    return 'CPF deve ter 11 dígitos';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 16),
-
-                              // ── Campo Senha ─────────────────────────────
-                              TextFormField(
-                                controller: _passwordController,
-                                obscureText: _obscurePassword,
-                                textInputAction: TextInputAction.done,
-                                onFieldSubmitted: (_) => _handleLogin(),
-                                decoration: InputDecoration(
-                                  labelText: 'Senha',
-                                  prefixIcon: const Icon(Icons.lock_outline),
-                                  border: const OutlineInputBorder(),
-                                  suffixIcon: IconButton(
-                                    icon: Icon(
-                                      _obscurePassword
-                                          ? Icons.visibility_off_outlined
-                                          : Icons.visibility_outlined,
-                                    ),
-                                    onPressed: () => setState(
-                                      () => _obscurePassword = !_obscurePassword,
-                                    ),
-                                    tooltip: _obscurePassword
-                                        ? 'Mostrar senha'
-                                        : 'Ocultar senha',
-                                  ),
-                                ),
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'Informe sua senha';
-                                  }
-                                  if (value.length < 4) {
-                                    return 'Senha muito curta';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 8),
-
-                              // Esqueci a senha
-                              Align(
-                                alignment: Alignment.centerRight,
-                                child: TextButton(
-                                  onPressed: () =>
-                                      context.push('/forgot-password'),
-                                  child: const Text('Esqueci minha senha'),
-                                ),
-                              ),
-
-                              // Configurações avançadas (URL multi-tenant)
-                              InkWell(
-                                onTap: () => setState(
-                                  () => _showAdvanced = !_showAdvanced,
-                                ),
-                                borderRadius: BorderRadius.circular(8),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    vertical: 4,
-                                    horizontal: 2,
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        _showAdvanced
-                                            ? Icons.expand_less
-                                            : Icons.expand_more,
-                                        size: 18,
-                                        color: Colors.grey,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      const Text(
-                                        'Configurações avançadas',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color: Colors.grey,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-
-                              if (_showAdvanced) ...[
-                                const SizedBox(height: 12),
-                                TextFormField(
-                                  controller: _baseUrlController,
-                                  keyboardType: TextInputType.url,
-                                  decoration: const InputDecoration(
-                                    labelText: 'URL do Condomínio',
-                                    hintText:
-                                        'https://meucondominio.erpcondominios.com.br',
-                                    prefixIcon: Icon(Icons.link),
-                                    helperText:
-                                        'Deixe em branco para usar o padrão',
-                                    border: OutlineInputBorder(),
-                                  ),
-                                ),
-                              ],
-                              const SizedBox(height: 24),
-
-                              // Mensagem de erro
-                              if (authState.status == AuthStatus.error &&
-                                  authState.errorMessage != null) ...[
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color: AppTheme.danger.withAlpha(25),
-                                    borderRadius: BorderRadius.circular(10),
-                                    border: Border.all(
-                                      color: AppTheme.danger.withAlpha(80),
-                                    ),
-                                  ),
-                                  child: Row(
-                                    children: [
-                                      const Icon(
-                                        Icons.error_outline,
-                                        color: AppTheme.danger,
-                                        size: 18,
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Expanded(
-                                        child: Text(
-                                          authState.errorMessage!,
-                                          style: const TextStyle(
-                                            color: AppTheme.danger,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                              ],
-
-                              // ── Botão Entrar ────────────────────────────
-                              // CORREÇÃO 2: botão SEMPRE habilitado quando
-                              // não está carregando (não depende de authState.initial)
-                              SizedBox(
-                                height: 52,
-                                child: ElevatedButton(
-                                  onPressed: isLoading ? null : _handleLogin,
-                                  style: ElevatedButton.styleFrom(
-                                    backgroundColor: AppTheme.primary,
-                                    foregroundColor: Colors.white,
-                                    shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12),
-                                    ),
-                                    elevation: 2,
-                                  ),
-                                  child: isLoading
-                                      ? const SizedBox(
-                                          height: 22,
-                                          width: 22,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2.5,
-                                            color: Colors.white,
-                                          ),
-                                        )
-                                      : const Text(
-                                          'Entrar',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 24),
-                    Text(
-                      'v${AppConstants.appVersion}',
-                      style: const TextStyle(
-                        color: Colors.white54,
-                        fontSize: 12,
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
+                      const SizedBox(height: 16),
+                    ],
+                  ),
                 ),
               ),
             ),

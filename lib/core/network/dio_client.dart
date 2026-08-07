@@ -3,7 +3,12 @@ import '../constants/app_constants.dart';
 import '../errors/app_exceptions.dart';
 import '../security/secure_storage_service.dart';
 
-/// Cliente HTTP configurado com interceptadores de autenticação e tratamento de erros
+/// Cliente HTTP centralizado do app ERP Condomínios.
+///
+/// MULTI-TENANT: A URL base é FIXA em [AppConstants.baseUrl].
+/// Todos os condomínios usam https://app.erpcondominios.com.br/
+/// O tenant é identificado pelo token Bearer gerado no login.
+/// NÃO há troca dinâmica de URL — removido updateBaseUrl/initBaseUrl.
 class DioClient {
   late final Dio _dio;
   final SecureStorageService _secureStorage;
@@ -11,12 +16,15 @@ class DioClient {
   DioClient(this._secureStorage) {
     _dio = Dio(
       BaseOptions(
+        // URL FIXA — multi-tenant por token, não por URL
+        baseUrl: AppConstants.baseUrl,
         connectTimeout: const Duration(milliseconds: AppConstants.connectTimeoutMs),
         receiveTimeout: const Duration(milliseconds: AppConstants.receiveTimeoutMs),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
         },
+        // Aceita qualquer status < 500 para tratar erros de negócio no app
         validateStatus: (status) => status != null && status < 500,
       ),
     );
@@ -27,21 +35,16 @@ class DioClient {
       LogInterceptor(
         requestBody: true,
         responseBody: true,
-        logPrint: (obj) => debugPrint('[DioClient] $obj'),
+        logPrint: (obj) => _log('[DioClient] $obj'),
       ),
     ]);
   }
 
   Dio get dio => _dio;
 
-  Future<void> updateBaseUrl(String baseUrl) async {
-    _dio.options.baseUrl = baseUrl;
-    await _secureStorage.saveBaseUrl(baseUrl);
-  }
-
-  Future<void> initBaseUrl() async {
-    final baseUrl = await _secureStorage.getBaseUrl();
-    _dio.options.baseUrl = baseUrl;
+  /// Limpa o token de autenticação do header (usado no logout).
+  void clearAuthToken() {
+    _dio.options.headers.remove('Authorization');
   }
 }
 
@@ -56,9 +59,15 @@ class _AuthInterceptor extends Interceptor {
     RequestOptions options,
     RequestInterceptorHandler handler,
   ) async {
-    final token = await _secureStorage.getAuthToken();
-    if (token != null && token.isNotEmpty) {
-      options.headers['Authorization'] = 'Bearer $token';
+    // Não injeta token nas rotas públicas (login, recuperação de senha)
+    final isPublicRoute = options.uri.toString().contains('action=login') ||
+        options.uri.toString().contains('api_recuperar_senha');
+
+    if (!isPublicRoute) {
+      final token = await _secureStorage.getAuthToken();
+      if (token != null && token.isNotEmpty) {
+        options.headers['Authorization'] = 'Bearer $token';
+      }
     }
     handler.next(options);
   }
@@ -115,7 +124,7 @@ class _ErrorInterceptor extends Interceptor {
   }
 }
 
-void debugPrint(String message) {
+void _log(String message) {
   // ignore: avoid_print
   print(message);
 }

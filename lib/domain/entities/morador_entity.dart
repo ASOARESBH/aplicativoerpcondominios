@@ -23,15 +23,16 @@ class MoradorEntity {
   });
 }
 
-/// Entidade de sessão do morador (armazenada localmente)
+/// Entidade de sessão do morador (armazenada localmente após login).
+///
+/// Multi-tenant: o tenant é identificado pelo [token] Bearer no servidor.
+/// Não há campo de URL customizada — todos usam [AppConstants.baseUrl].
 class MoradorSessionEntity {
   final String token;
   final int moradorId;
   final String nome;
   final String unidade;
   final String? email;
-  final String? tenantId;
-  final bool senhaTemporaria;
 
   const MoradorSessionEntity({
     required this.token,
@@ -39,7 +40,5 @@ class MoradorSessionEntity {
     required this.nome,
     required this.unidade,
     this.email,
-    this.tenantId,
-    this.senhaTemporaria = false,
   });
 }

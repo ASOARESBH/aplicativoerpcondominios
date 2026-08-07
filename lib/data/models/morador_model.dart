@@ -49,7 +49,8 @@ class MoradorModel extends MoradorEntity {
   }
 }
 
-/// Modelo de resposta do Login
+/// Modelo de resposta do Login.
+/// A API retorna: {sucesso, mensagem, dados: {token, morador_id, morador_nome, unidade}}
 class LoginResponseModel {
   final bool sucesso;
   final String mensagem;
@@ -58,7 +59,6 @@ class LoginResponseModel {
   final String? nome;
   final String? unidade;
   final String? email;
-  final bool senhaTemporaria;
 
   const LoginResponseModel({
     required this.sucesso,
@@ -68,15 +68,14 @@ class LoginResponseModel {
     this.nome,
     this.unidade,
     this.email,
-    this.senhaTemporaria = false,
   });
 
   factory LoginResponseModel.fromJson(Map<String, dynamic> json) {
     final dados = json['dados'] as Map<String, dynamic>?;
     return LoginResponseModel(
-      sucesso: json['sucesso'] == true,
+      sucesso:  json['sucesso'] == true,
       mensagem: json['mensagem']?.toString() ?? '',
-      token: dados?['token']?.toString() ?? json['token']?.toString(),
+      token:    dados?['token']?.toString() ?? json['token']?.toString(),
       moradorId: _parseInt(dados?['morador_id'] ?? json['morador_id']),
       // API retorna 'morador_nome' (não 'nome') dentro de dados
       nome: dados?['morador_nome']?.toString()
@@ -84,10 +83,7 @@ class LoginResponseModel {
           ?? json['morador_nome']?.toString()
           ?? json['nome']?.toString(),
       unidade: dados?['unidade']?.toString() ?? json['unidade']?.toString(),
-      email: dados?['email']?.toString() ?? json['email']?.toString(),
-      senhaTemporaria: dados?['senha_temporaria'] == 1 ||
-          dados?['senha_temporaria'] == '1' ||
-          dados?['senha_temporaria'] == true,
+      email:   dados?['email']?.toString() ?? json['email']?.toString(),
     );
   }
 
