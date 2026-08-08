@@ -47,7 +47,7 @@ class _VisitorsScreenState extends ConsumerState<VisitorsScreen> {
     setState(() => _loadingList = true);
     try {
       final dioClient = ref.read(dioClientProvider);
-      final response = await dioClient.dio.get(AppConstants.endpointPortal);
+      final response = await dioClient.dio.get(AppConstants.endpointPortal, queryParameters: {'action': 'visitantes'});
       final data = response.data as Map<String, dynamic>;
       if (data['sucesso'] == true) {
         setState(() {
@@ -72,6 +72,7 @@ class _VisitorsScreenState extends ConsumerState<VisitorsScreen> {
       final dioClient = ref.read(dioClientProvider);
       final response = await dioClient.dio.post(
         AppConstants.endpointPortal,
+        queryParameters: {'action': 'visitantes'},
         data: {
           'nome_completo': _nomeController.text,
           'tipo_documento': _tipoDocumento,
@@ -132,7 +133,7 @@ class _VisitorsScreenState extends ConsumerState<VisitorsScreen> {
     if (confirm != true) return;
     try {
       final dioClient = ref.read(dioClientProvider);
-      final response = await dioClient.dio.delete('${AppConstants.endpointPortal}&id=$id');
+      final response = await dioClient.dio.delete(AppConstants.endpointPortal, queryParameters: {'action': 'visitantes', 'id': id});
       final data = response.data as Map<String, dynamic>;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

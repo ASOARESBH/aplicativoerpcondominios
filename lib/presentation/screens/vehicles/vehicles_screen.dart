@@ -22,7 +22,7 @@ class _VehiclesScreenState extends ConsumerState<VehiclesScreen> {
     setState(() => _loading = true);
     try {
       final dioClient = ref.read(dioClientProvider);
-      final response = await dioClient.dio.get(AppConstants.endpointPortal);
+      final response = await dioClient.dio.get(AppConstants.endpointPortal, queryParameters: {'action': 'veiculos'});
       final data = response.data as Map<String, dynamic>;
       if (data['sucesso'] == true) {
         final dados = data['dados'];

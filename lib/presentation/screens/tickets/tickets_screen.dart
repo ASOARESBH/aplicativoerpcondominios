@@ -33,8 +33,8 @@ class _TicketsScreenState extends ConsumerState<TicketsScreen> {
       final dioClient = ref.read(dioClientProvider);
       final statusParam = _statusFilter.isNotEmpty ? '&status=$_statusFilter' : '';
       final results = await Future.wait([
-        dioClient.dio.get('${AppConstants.endpointOS}?action=listar_assuntos'),
-        dioClient.dio.get('${AppConstants.endpointOS}?action=listar&pagina=$_page$statusParam'),
+        dioClient.dio.get(AppConstants.endpointOS, queryParameters: {'action': 'listar_assuntos'}),
+        dioClient.dio.get(AppConstants.endpointOS, queryParameters: {'action': 'listar', 'pagina': _page, if (statusParam.isNotEmpty) 'status': statusParam.replaceAll('&status=', '')}),
       ]);
       final subjectsData = results[0].data as Map<String, dynamic>;
       final ticketsData = results[1].data as Map<String, dynamic>;
@@ -324,7 +324,7 @@ class _TicketDetailSheetState extends State<_TicketDetailSheet> {
     try {
       await widget.dioClient.initBaseUrl();
       final id = widget.ticket['id'];
-      final response = await widget.dioClient.dio.get('${AppConstants.endpointOS}?action=detalhe&id=$id');
+      final response = await widget.dioClient.dio.get(AppConstants.endpointOS, queryParameters: {'action': 'detalhe', 'id': id});
       final data = response.data as Map<String, dynamic>;
       if (data['sucesso'] == true) {
         final dados = data['dados'] as Map<String, dynamic>?;

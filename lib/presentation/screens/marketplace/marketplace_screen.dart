@@ -25,7 +25,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
     setState(() => _loading = true);
     try {
       final dioClient = ref.read(dioClientProvider);
-      final response = await dioClient.dio.get('${AppConstants.endpointMarketplace}?acao=vitrine');
+      final response = await dioClient.dio.get(AppConstants.endpointMarketplace, queryParameters: {'acao': 'vitrine'});
       final data = response.data as Map<String, dynamic>;
       if (data['sucesso'] == true) {
         final dados = data['dados'];
@@ -41,7 +41,7 @@ class _MarketplaceScreenState extends ConsumerState<MarketplaceScreen> {
     setState(() => _loadingOrders = true);
     try {
       final dioClient = ref.read(dioClientProvider);
-      final response = await dioClient.dio.get('${AppConstants.endpointMarketplace}?acao=meus_pedidos');
+      final response = await dioClient.dio.get(AppConstants.endpointMarketplace, queryParameters: {'acao': 'meus_pedidos'});
       final data = response.data as Map<String, dynamic>;
       if (data['sucesso'] == true) setState(() => _orders = List<Map<String, dynamic>>.from(data['dados'] ?? []));
     } catch (e) { debugPrint('[MarketplaceScreen] Orders error: $e'); }

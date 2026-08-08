@@ -6,6 +6,7 @@ import '../screens/splash/splash_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
 import '../screens/home/home_screen.dart';
+import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/visitors/visitors_screen.dart';
 import '../screens/access/access_screen.dart';
@@ -21,22 +22,23 @@ import '../screens/notifications/notifications_screen.dart';
 
 /// Rotas nomeadas do aplicativo
 class AppRoutes {
-  static const String splash = '/';
-  static const String login = '/login';
+  static const String splash       = '/';
+  static const String login        = '/login';
   static const String forgotPassword = '/forgot-password';
-  static const String home = '/home';
-  static const String profile = '/profile';
-  static const String visitors = '/visitors';
-  static const String access = '/access';
-  static const String dependents = '/dependents';
-  static const String protocols = '/protocols';
-  static const String waterMeter = '/water-meter';
-  static const String vehicles = '/vehicles';
-  static const String documents = '/documents';
-  static const String projects = '/projects';
-  static const String tickets = '/tickets';
-  static const String marketplace = '/marketplace';
-  static const String notifications = '/notifications';
+  // Shell routes (dentro do HomeScreen com bottom nav)
+  static const String home         = '/home';
+  static const String profile      = '/home/profile';
+  static const String visitors     = '/home/visitors';
+  static const String access       = '/home/access';
+  static const String dependents   = '/home/dependents';
+  static const String protocols    = '/home/protocols';
+  static const String waterMeter   = '/home/water-meter';
+  static const String vehicles     = '/home/vehicles';
+  static const String documents    = '/home/documents';
+  static const String projects     = '/home/projects';
+  static const String tickets      = '/home/tickets';
+  static const String marketplace  = '/home/marketplace';
+  static const String notifications = '/home/notifications';
 }
 
 /// Configuração do roteador GoRouter com redirect automático
@@ -48,21 +50,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     debugLogDiagnostics: false,
     redirect: (context, state) {
       final isAuthenticated = authState.isAuthenticated;
-      final isLoading = authState.isLoading;
-      final currentPath = state.matchedLocation;
+      final isLoading       = authState.isLoading;
+      final currentPath     = state.matchedLocation;
+
       final isPublicPage = currentPath == AppRoutes.login ||
           currentPath == AppRoutes.forgotPassword ||
           currentPath == AppRoutes.splash;
 
-      // Nunca redirecionar enquanto está carregando
+      // Nunca redirecionar enquanto carrega
       if (isLoading) return null;
 
-      // Se não autenticado e tentando acessar página protegida → login
+      // Não autenticado tentando acessar página protegida → login
       if (!isAuthenticated && !isPublicPage) return AppRoutes.login;
 
-      // Se autenticado e na tela de login → home
+      // Autenticado na tela de login → dashboard
       if (isAuthenticated && currentPath == AppRoutes.login) {
-        return AppRoutes.profile;
+        return AppRoutes.home;
       }
 
       return null;
@@ -89,7 +92,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.home,
             name: 'home',
-            builder: (context, state) => const ProfileScreen(),
+            // Dashboard: mostra dados da sessão sem chamada de rede
+            builder: (context, state) => const DashboardScreen(),
           ),
           GoRoute(
             path: AppRoutes.profile,
@@ -164,7 +168,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             Text('Página não encontrada: ${state.matchedLocation}'),
             const SizedBox(height: 16),
             ElevatedButton(
-              onPressed: () => context.go(AppRoutes.profile),
+              onPressed: () => context.go(AppRoutes.home),
               child: const Text('Ir para Início'),
             ),
           ],

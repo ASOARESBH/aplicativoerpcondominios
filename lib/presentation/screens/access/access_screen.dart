@@ -51,8 +51,8 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
       final moradorId = authState.session?.moradorId;
 
       final results = await Future.wait([
-        dioClient.dio.get(AppConstants.endpointPortal),
-        dioClient.dio.get('${AppConstants.endpointAcessos}?morador_id=$moradorId'),
+        dioClient.dio.get(AppConstants.endpointPortal, queryParameters: {'action': 'visitantes'}),
+        dioClient.dio.get(AppConstants.endpointAcessos, queryParameters: {'morador_id': moradorId}),
       ]);
 
       final visitorsData = results[0].data as Map<String, dynamic>;
@@ -199,7 +199,7 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
     if (confirm != true) return;
     try {
       final dioClient = ref.read(dioClientProvider);
-      final response = await dioClient.dio.delete('${AppConstants.endpointAcessos}?id=$id');
+      final response = await dioClient.dio.delete(AppConstants.endpointAcessos, queryParameters: {'id': id});
       final data = response.data as Map<String, dynamic>;
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

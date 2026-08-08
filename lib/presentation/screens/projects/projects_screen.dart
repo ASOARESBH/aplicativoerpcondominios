@@ -25,7 +25,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     setState(() => _loading = true);
     try {
       final dioClient = ref.read(dioClientProvider);
-      final response = await dioClient.dio.get('${AppConstants.endpointProjetos}?acao=listar');
+      final response = await dioClient.dio.get(AppConstants.endpointProjetos, queryParameters: {'acao': 'listar'});
       final data = response.data as Map<String, dynamic>;
       if (data['sucesso'] == true) {
         final dados = data['dados'];
@@ -41,7 +41,7 @@ class _ProjectsScreenState extends ConsumerState<ProjectsScreen> {
     setState(() { _loadingDetail = true; _timeline = []; });
     try {
       final dioClient = ref.read(dioClientProvider);
-      final response = await dioClient.dio.get('${AppConstants.endpointProjetos}?acao=detalhe&id=$id');
+      final response = await dioClient.dio.get(AppConstants.endpointProjetos, queryParameters: {'acao': 'detalhe', 'id': id});
       final data = response.data as Map<String, dynamic>;
       if (data['sucesso'] == true) {
         final dados = data['dados'] as Map<String, dynamic>?;

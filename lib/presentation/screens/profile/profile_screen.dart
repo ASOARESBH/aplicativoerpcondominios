@@ -13,7 +13,11 @@ final _profileDataProvider = FutureProvider<MoradorModel?>((ref) async {
   if (!authState.isAuthenticated) return null;
   final dioClient = ref.read(dioClientProvider);
   try {
-    final response = await dioClient.dio.get(AppConstants.endpointPortal);
+    // API: GET /api/api_portal_morador.php?action=perfil
+    final response = await dioClient.dio.get(
+      AppConstants.endpointPortal,
+      queryParameters: {'action': 'perfil'},
+    );
     final data = response.data as Map<String, dynamic>;
     if (data['sucesso'] == true && data['dados'] != null) {
       return MoradorModel.fromJson(data['dados'] as Map<String, dynamic>);
@@ -30,17 +34,17 @@ class ProfileScreen extends ConsumerStatefulWidget {
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  final _phoneFormKey = GlobalKey<FormState>();
-  final _passwordFormKey = GlobalKey<FormState>();
-  final _telefoneController = TextEditingController();
-  final _celularController = TextEditingController();
+  final _phoneFormKey     = GlobalKey<FormState>();
+  final _passwordFormKey  = GlobalKey<FormState>();
+  final _telefoneController   = TextEditingController();
+  final _celularController    = TextEditingController();
   final _senhaAtualController = TextEditingController();
-  final _senhaNovController = TextEditingController();
+  final _senhaNovController   = TextEditingController();
   final _senhaConfirmarController = TextEditingController();
-  bool _savingPhone = false;
+  bool _savingPhone    = false;
   bool _savingPassword = false;
-  bool _obscureSenhaAtual = true;
-  bool _obscureSenhaNova = true;
+  bool _obscureSenhaAtual    = true;
+  bool _obscureSenhaNova     = true;
   bool _obscureSenhaConfirmar = true;
 
   @override
@@ -58,21 +62,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     setState(() => _savingPhone = true);
     try {
       final dioClient = ref.read(dioClientProvider);
+      // API: PUT /api/api_portal_morador.php?action=perfil
       final response = await dioClient.dio.put(
         AppConstants.endpointPortal,
+        queryParameters: {'action': 'perfil'},
         data: {
           'telefone': _telefoneController.text,
-          'celular': _celularController.text,
+          'celular':  _celularController.text,
         },
       );
       final data = response.data as Map<String, dynamic>;
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(data['mensagem']?.toString() ?? ''),
-            backgroundColor: data['sucesso'] == true ? AppTheme.success : AppTheme.danger,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(data['mensagem']?.toString() ?? ''),
+          backgroundColor: data['sucesso'] == true ? AppTheme.success : AppTheme.danger,
+        ));
       }
     } catch (e) {
       if (mounted) {
@@ -88,32 +92,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   Future<void> _changePassword() async {
     if (!_passwordFormKey.currentState!.validate()) return;
     if (_senhaNovController.text != _senhaConfirmarController.text) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('As senhas não coincidem.'),
-          backgroundColor: AppTheme.danger,
-        ),
-      );
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+        content: Text('As senhas não coincidem.'),
+        backgroundColor: AppTheme.danger,
+      ));
       return;
     }
     setState(() => _savingPassword = true);
     try {
       final dioClient = ref.read(dioClientProvider);
+      // API: PUT /api/api_portal_morador.php?action=alterar_senha
       final response = await dioClient.dio.put(
         AppConstants.endpointPortal,
+        queryParameters: {'action': 'alterar_senha'},
         data: {
           'senha_atual': _senhaAtualController.text,
-          'senha_nova': _senhaNovController.text,
+          'senha_nova':  _senhaNovController.text,
         },
       );
       final data = response.data as Map<String, dynamic>;
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(data['mensagem']?.toString() ?? ''),
-            backgroundColor: data['sucesso'] == true ? AppTheme.success : AppTheme.danger,
-          ),
-        );
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: Text(data['mensagem']?.toString() ?? ''),
+          backgroundColor: data['sucesso'] == true ? AppTheme.success : AppTheme.danger,
+        ));
         if (data['sucesso'] == true) {
           _senhaAtualController.clear();
           _senhaNovController.clear();
@@ -134,7 +136,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(_profileDataProvider);
-    final authState = ref.watch(authProvider);
 
     return RefreshIndicator(
       onRefresh: () async => ref.invalidate(_profileDataProvider),
@@ -154,7 +155,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           data: (morador) {
             if (morador != null) {
-              // Preencher campos de telefone
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 if (_telefoneController.text.isEmpty) {
                   _telefoneController.text = morador.telefone ?? '';
@@ -168,30 +168,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Senha temporária warning
-                if (false == true)
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    margin: const EdgeInsets.only(bottom: 16),
-                    decoration: BoxDecoration(
-                      color: AppTheme.warning.withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: AppTheme.warning),
-                    ),
-                    child: const Row(
-                      children: [
-                        Icon(Icons.warning_amber, color: AppTheme.warning),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: Text(
-                            'Você está usando uma senha temporária. Altere sua senha para continuar.',
-                            style: TextStyle(fontSize: 13),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
                 // Dados do perfil
                 Card(
                   child: Padding(
@@ -211,9 +187,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               child: const Icon(Icons.badge, color: AppTheme.primary),
                             ),
                             const SizedBox(width: 12),
-                            Column(
+                            const Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
-                              children: const [
+                              children: [
                                 Text('Meus Dados', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
                                 Text('Informações cadastrais', style: TextStyle(fontSize: 12, color: Colors.grey)),
                               ],
@@ -221,10 +197,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           ],
                         ),
                         const SizedBox(height: 16),
-                        _InfoRow(label: 'Nome', value: morador?.nome ?? '—'),
-                        _InfoRow(label: 'CPF', value: morador?.cpf ?? '—'),
+                        _InfoRow(label: 'Nome',    value: morador?.nome    ?? '—'),
+                        _InfoRow(label: 'CPF',     value: morador?.cpf     ?? '—'),
                         _InfoRow(label: 'Unidade', value: morador?.unidade ?? '—'),
-                        _InfoRow(label: 'E-mail', value: morador?.email ?? '—'),
+                        _InfoRow(label: 'E-mail',  value: morador?.email   ?? '—'),
                       ],
                     ),
                   ),
@@ -270,11 +246,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             child: ElevatedButton.icon(
                               onPressed: _savingPhone ? null : _savePhone,
                               icon: _savingPhone
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                    )
+                                  ? const SizedBox(width: 16, height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                                   : const Icon(Icons.save),
                               label: const Text('Salvar Contatos'),
                             ),
@@ -348,11 +321,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             child: ElevatedButton.icon(
                               onPressed: _savingPassword ? null : _changePassword,
                               icon: _savingPassword
-                                  ? const SizedBox(
-                                      width: 16,
-                                      height: 16,
-                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                    )
+                                  ? const SizedBox(width: 16, height: 16,
+                                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
                                   : const Icon(Icons.key),
                               label: const Text('Alterar Senha'),
                             ),
