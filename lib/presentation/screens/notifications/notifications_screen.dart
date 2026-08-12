@@ -103,7 +103,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         await manager.disableDeviceAlerts();
         effectiveValue = false;
         message =
-            'Alertas no dispositivo desabilitados. As encomendas continuam na lista desta tela.';
+            'Alertas no dispositivo desabilitados. Os avisos continuam disponíveis nesta lista.';
       }
 
       if (mounted) {
@@ -215,7 +215,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                 padding: EdgeInsets.only(top: 64),
                 child: EmptyState(
                   icon: Icons.notifications_none_outlined,
-                  message: 'Nenhuma notificação de encomenda até o momento.',
+                  message: 'Nenhuma notificação até o momento.',
                 ),
               )
             else ...[
@@ -277,7 +277,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           _isSavingPreference
               ? 'Atualizando preferência...'
               : _deviceAlertsEnabled
-                  ? 'Você será avisado sobre encomendas e veículos cadastrados para sua unidade.'
+                  ? 'Você será avisado sobre encomendas, veículos e entradas/saídas da sua unidade.'
                   : 'Ative para receber avisos no display do celular.',
           style: TextStyle(color: subtitleColor),
         ),
@@ -290,10 +290,18 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final type = notification['tipo']?.toString() ?? '';
     final isDelivered = type == 'mercadoria_entregue';
     final isVehicle = type == 'veiculo_cadastrado';
+    final isAccessEntry = type == 'acesso_entrada';
+    final isAccessExit = type == 'acesso_saida';
     final title = notification['titulo']?.toString() ??
         (isVehicle
             ? 'Veículo cadastrado'
-            : (isDelivered ? 'Mercadoria recebida' : 'Sua encomenda chegou'));
+            : (isAccessEntry
+                ? 'Entrada registrada'
+                : (isAccessExit
+                    ? 'Saída registrada'
+                    : (isDelivered
+                        ? 'Mercadoria recebida'
+                        : 'Sua encomenda chegou'))));
     final body = notification['mensagem']?.toString() ?? '';
     final timestamp = _formatDate(notification['criado_em']?.toString());
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -308,10 +316,20 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B);
     final eventColor = isVehicle
         ? AppTheme.primary
-        : (isDelivered ? AppTheme.success : AppTheme.primary);
+        : (isAccessEntry
+            ? AppTheme.success
+            : (isAccessExit
+                ? Colors.orange.shade700
+                : (isDelivered ? AppTheme.success : AppTheme.primary)));
     final eventIcon = isVehicle
         ? Icons.directions_car_outlined
-        : (isDelivered ? Icons.task_alt_outlined : Icons.inventory_2_outlined);
+        : (isAccessEntry
+            ? Icons.login_outlined
+            : (isAccessExit
+                ? Icons.logout_outlined
+                : (isDelivered
+                    ? Icons.task_alt_outlined
+                    : Icons.inventory_2_outlined)));
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),

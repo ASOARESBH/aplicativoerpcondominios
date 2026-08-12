@@ -29,7 +29,7 @@ class DeviceAlertPermissionResult {
 
 /// Serviço de notificações locais e push (Firebase Cloud Messaging).
 ///
-/// O histórico de encomendas é sempre buscado na API. O push é opcional:
+/// O histórico de avisos é sempre buscado na API. O push é opcional:
 /// somente é ativado depois que o morador permite alertas no dispositivo.
 class NotificationService {
   NotificationService._internal();
@@ -91,7 +91,8 @@ class NotificationService {
     await androidPlugin?.createNotificationChannel(accessChannel);
 
     _localInitialized = true;
-    debugPrint('[NotificationService] canal local de encomendas inicializado');
+    debugPrint(
+        '[NotificationService] canais locais de encomendas e controle de acesso inicializados');
   }
 
   /// Indica se o morador optou por receber banners/sons no aparelho.
@@ -241,12 +242,20 @@ class NotificationService {
       title: title,
       body: body,
       payload: jsonEncode(data),
-      channelId: data['tipo']?.toString() == 'veiculo_cadastrado'
+      channelId: _isControlAccessEvent(data)
           ? NotificationChannels.controleAcesso
           : (data['tipo']?.toString().contains('mercadoria') == true
               ? NotificationChannels.encomendas
               : NotificationChannels.geral),
     );
+  }
+
+  bool _isControlAccessEvent(Map<String, dynamic> data) {
+    final type = data['tipo']?.toString() ?? '';
+    return data['origem']?.toString() == 'controle_acesso' ||
+        type == 'veiculo_cadastrado' ||
+        type == 'acesso_entrada' ||
+        type == 'acesso_saida';
   }
 
   void _onMessageOpened(RemoteMessage message) {
