@@ -1,5 +1,6 @@
 import 'dart:developer' as developer;
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -36,22 +37,43 @@ class _EmployeeProtocolsScreenState
         queryParameters: {'status': _status},
       );
       final data = response.data;
-      if (data is Map && data['sucesso'] == true && data['dados'] is List) {
-        if (mounted) {
-          setState(
-            () => _protocols = data['dados']
-                .whereType<Map>()
-                .map((item) => Map<String, dynamic>.from(item))
-                .toList(),
-          );
-        }
-      } else {
-        _show(_message(data), danger: true);
+      if (data is! Map) {
+        throw FormatException('Resposta inválida do servidor.');
       }
-    } catch (error) {
-      developer.log('Falha ao carregar protocolos: ${error.runtimeType}',
-          name: 'ColaboradorProtocolos');
-      _show('Não foi possível carregar os protocolos.', danger: true);
+      if (data['sucesso'] != true) {
+        _show(_message(data), danger: true);
+        return;
+      }
+      final rawRows = data['dados'];
+      if (rawRows is! List) {
+        throw FormatException(
+            'A lista de protocolos retornou formato inválido.');
+      }
+
+      // Normaliza chaves de qualquer mapa JSON/MariaDB antes de montar a tela.
+      // Isso evita TypeError quando o servidor retorna chaves numéricas ou Map<dynamic, dynamic>.
+      final protocols = <Map<String, dynamic>>[];
+      for (final row in rawRows) {
+        if (row is! Map) continue;
+        protocols.add(
+          row.map((key, value) => MapEntry(key.toString(), value)),
+        );
+      }
+      developer.log(
+        'Protocolos carregados: ${protocols.length}; status=$_status',
+        name: 'ColaboradorProtocolos',
+      );
+      if (mounted) {
+        setState(() => _protocols = protocols);
+      }
+    } catch (error, stackTrace) {
+      developer.log(
+        'Falha ao carregar protocolos: $error',
+        name: 'ColaboradorProtocolos',
+        error: error,
+        stackTrace: stackTrace,
+      );
+      _show(_message(error), danger: true);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -202,9 +224,17 @@ class _EmployeeProtocolsScreenState
   }
 
   String _message(dynamic value) {
+    if (value is DioException) {
+      final data = value.response?.data;
+      if (data is Map && data['mensagem'] != null) {
+        return data['mensagem'].toString();
+      }
+      return 'O servidor não respondeu à consulta de protocolos.';
+    }
     if (value is Map && value['mensagem'] != null) {
       return value['mensagem'].toString();
     }
+    if (value is FormatException) return value.message;
     return 'Não foi possível carregar os protocolos.';
   }
 }
