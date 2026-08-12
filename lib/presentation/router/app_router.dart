@@ -14,6 +14,7 @@ import '../screens/documents/documents_screen.dart';
 import '../screens/employee/employee_dashboard_screen.dart';
 import '../screens/employee/employee_login_screen.dart';
 import '../screens/employee/employee_shell_screen.dart';
+import '../screens/employee/employee_tickets_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/marketplace/marketplace_screen.dart';
 import '../screens/notifications/notifications_screen.dart';
@@ -133,6 +134,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.employeeHome,
             name: 'employee-home',
             builder: (context, state) => const EmployeeDashboardScreen(),
+          ),
+          GoRoute(
+            path: '/employee/tickets',
+            name: 'employee-tickets',
+            builder: (context, state) => const EmployeeTicketsScreen(),
+          ),
+          GoRoute(
+            path: '/employee/tickets/new',
+            name: 'employee-ticket-new',
+            builder: (context, state) =>
+                const EmployeeTicketsScreen(openForm: true),
           ),
         ],
       ),
