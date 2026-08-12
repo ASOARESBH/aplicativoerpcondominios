@@ -1,5 +1,6 @@
 import 'dart:developer' as developer;
 
+import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_constants.dart';
@@ -173,13 +174,23 @@ class EmployeeAuthNotifier extends StateNotifier<EmployeeAuthState> {
   }
 
   String _message(dynamic value) {
+    if (value is DioException) {
+      final data = value.response?.data;
+      if (data is Map && data['mensagem'] != null) {
+        return data['mensagem'].toString();
+      }
+      return switch (value.response?.statusCode) {
+        401 => 'E-mail ou senha incorretos.',
+        403 => 'Seu usuário não possui autorização para este portal.',
+        503 =>
+          'O Portal do Colaborador está sendo preparado no servidor. Tente novamente em alguns minutos.',
+        _ => 'Não foi possível acessar o servidor agora. Tente novamente.',
+      };
+    }
     if (value is Map && value['mensagem'] != null) {
       return value['mensagem'].toString();
     }
-    final message = value.toString().replaceFirst('Exception: ', '');
-    return message.isEmpty
-        ? 'Não foi possível acessar o Portal do Colaborador.'
-        : message;
+    return 'Não foi possível acessar o Portal do Colaborador.';
   }
 }
 
