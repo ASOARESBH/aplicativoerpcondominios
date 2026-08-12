@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Identificação dos canais de alerta mostrados pelo sistema operacional.
 class NotificationChannels {
   static const String encomendas = 'encomendas';
+  static const String controleAcesso = 'controle_acesso';
   static const String geral = 'erp_condominios';
 }
 
@@ -79,6 +80,15 @@ class NotificationService {
         _localNotifications.resolvePlatformSpecificImplementation<
             AndroidFlutterLocalNotificationsPlugin>();
     await androidPlugin?.createNotificationChannel(channel);
+    const accessChannel = AndroidNotificationChannel(
+      NotificationChannels.controleAcesso,
+      'Controle de Acesso',
+      description: 'Avisos de veículos e movimentações de acesso da unidade.',
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+    );
+    await androidPlugin?.createNotificationChannel(accessChannel);
 
     _localInitialized = true;
     debugPrint('[NotificationService] canal local de encomendas inicializado');
@@ -231,9 +241,11 @@ class NotificationService {
       title: title,
       body: body,
       payload: jsonEncode(data),
-      channelId: data['tipo']?.toString().contains('mercadoria') == true
-          ? NotificationChannels.encomendas
-          : NotificationChannels.geral,
+      channelId: data['tipo']?.toString() == 'veiculo_cadastrado'
+          ? NotificationChannels.controleAcesso
+          : (data['tipo']?.toString().contains('mercadoria') == true
+              ? NotificationChannels.encomendas
+              : NotificationChannels.geral),
     );
   }
 
@@ -259,10 +271,14 @@ class NotificationService {
       channelId,
       channelId == NotificationChannels.encomendas
           ? 'Encomendas'
-          : 'ERP Condomínios',
+          : (channelId == NotificationChannels.controleAcesso
+              ? 'Controle de Acesso'
+              : 'ERP Condomínios'),
       channelDescription: channelId == NotificationChannels.encomendas
           ? 'Avisos de chegada e entrega de encomendas.'
-          : 'Notificações do ERP Condomínios.',
+          : (channelId == NotificationChannels.controleAcesso
+              ? 'Avisos de veículos e movimentações de acesso da unidade.'
+              : 'Notificações do ERP Condomínios.'),
       importance: Importance.high,
       priority: Priority.high,
       showWhen: true,

@@ -277,7 +277,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
           _isSavingPreference
               ? 'Atualizando preferência...'
               : _deviceAlertsEnabled
-                  ? 'Você será avisado quando uma encomenda chegar ou for entregue.'
+                  ? 'Você será avisado sobre encomendas e veículos cadastrados para sua unidade.'
                   : 'Ative para receber avisos no display do celular.',
           style: TextStyle(color: subtitleColor),
         ),
@@ -289,8 +289,11 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
     final isRead = _asBool(notification['lida']);
     final type = notification['tipo']?.toString() ?? '';
     final isDelivered = type == 'mercadoria_entregue';
+    final isVehicle = type == 'veiculo_cadastrado';
     final title = notification['titulo']?.toString() ??
-        (isDelivered ? 'Mercadoria recebida' : 'Sua encomenda chegou');
+        (isVehicle
+            ? 'Veículo cadastrado'
+            : (isDelivered ? 'Mercadoria recebida' : 'Sua encomenda chegou'));
     final body = notification['mensagem']?.toString() ?? '';
     final timestamp = _formatDate(notification['criado_em']?.toString());
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -303,6 +306,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         isDark ? const Color(0xFFE2E8F0) : const Color(0xFF475569);
     final dateColor =
         isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B);
+    final eventColor = isVehicle
+        ? AppTheme.primary
+        : (isDelivered ? AppTheme.success : AppTheme.primary);
+    final eventIcon = isVehicle
+        ? Icons.directions_car_outlined
+        : (isDelivered ? Icons.task_alt_outlined : Icons.inventory_2_outlined);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
@@ -320,15 +329,12 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(
-                    color: (isDelivered ? AppTheme.success : AppTheme.primary)
-                        .withAlpha(28),
+                    color: eventColor.withAlpha(28),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
-                    isDelivered
-                        ? Icons.task_alt_outlined
-                        : Icons.inventory_2_outlined,
-                    color: isDelivered ? AppTheme.success : AppTheme.primary,
+                    eventIcon,
+                    color: eventColor,
                   ),
                 ),
                 const SizedBox(width: 12),
