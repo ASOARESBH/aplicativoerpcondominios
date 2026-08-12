@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/network/dio_client.dart';
 import '../../core/security/secure_storage_service.dart';
@@ -49,14 +50,14 @@ class AuthState {
     String? errorMessage,
   }) {
     return AuthState(
-      status:       status ?? this.status,
-      session:      session ?? this.session,
+      status: status ?? this.status,
+      session: session ?? this.session,
       errorMessage: errorMessage,
     );
   }
 
   bool get isAuthenticated => status == AuthStatus.authenticated;
-  bool get isLoading       => status == AuthStatus.loading;
+  bool get isLoading => status == AuthStatus.loading;
 }
 
 // ─── Auth Notifier ────────────────────────────────────────────────────────────
@@ -80,7 +81,7 @@ class AuthNotifier extends StateNotifier<AuthState> {
       final isValid = await _repository.verifySession();
       if (isValid) {
         state = state.copyWith(
-          status:  AuthStatus.authenticated,
+          status: AuthStatus.authenticated,
           session: localSession,
         );
       } else {
@@ -98,19 +99,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String cpf,
     required String password,
   }) async {
+    debugPrint('[Auth] iniciando autenticação');
     state = state.copyWith(status: AuthStatus.loading, errorMessage: null);
     try {
       final session = await _repository.login(
-        cpf:      cpf,
+        cpf: cpf,
         password: password,
       );
+      debugPrint('[Auth] sessão persistida; morador=${session.moradorId}');
       state = state.copyWith(
-        status:  AuthStatus.authenticated,
+        status: AuthStatus.authenticated,
         session: session,
       );
+      debugPrint('[Auth] estado autenticado publicado');
     } catch (e) {
+      debugPrint('[Auth] falha na autenticação: $e');
       state = state.copyWith(
-        status:       AuthStatus.error,
+        status: AuthStatus.error,
         errorMessage: e.toString().replaceAll('Exception: ', ''),
       );
     }

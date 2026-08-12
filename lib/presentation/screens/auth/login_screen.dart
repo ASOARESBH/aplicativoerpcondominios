@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -62,24 +64,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
           password: senha,
         );
 
-    // Reativa o token previamente autorizado sem atrasar a navegação.
+    // Push é complementar e nunca pode reter a navegação pós-login.
+    // O roteador reage ao estado autenticado; esta sincronização ocorre em
+    // segundo plano e qualquer falha fica isolada do fluxo principal.
     if (ref.read(authProvider).isAuthenticated) {
-      await ref
-          .read(notificationManagerProvider)
-          .syncAfterAuthenticatedSession();
+      unawaited(
+        ref.read(notificationManagerProvider).syncAfterAuthenticatedSession(),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authProvider);
-
-    // Navegar para home ao autenticar
-    ref.listen<AuthState>(authProvider, (_, next) {
-      if (next.status == AuthStatus.authenticated) {
-        context.go('/home');
-      }
-    });
 
     final isLoading = authState.isLoading;
 

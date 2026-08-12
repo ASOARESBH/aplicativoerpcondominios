@@ -65,6 +65,7 @@ class AppConstants {
 
   // ─── Storage Keys (Secure Storage) ───────────────────────────────────────
   static const String keyAuthToken = 'portal_token';
+  static const String keyMoradorSession = 'morador_session';
   static const String keyMoradorId = 'morador_id';
   static const String keyMoradorNome = 'morador_nome';
   static const String keyMoradorUnidade = 'morador_unidade';

@@ -1,73 +1,98 @@
+import 'dart:developer' as developer;
+
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
 import '../providers/auth_provider.dart';
-import '../screens/splash/splash_screen.dart';
-import '../screens/auth/login_screen.dart';
-import '../screens/auth/forgot_password_screen.dart';
-import '../screens/home/home_screen.dart';
-import '../screens/dashboard/dashboard_screen.dart';
-import '../screens/profile/profile_screen.dart';
-import '../screens/visitors/visitors_screen.dart';
 import '../screens/access/access_screen.dart';
+import '../screens/auth/forgot_password_screen.dart';
+import '../screens/auth/login_screen.dart';
+import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/dependents/dependents_screen.dart';
-import '../screens/protocols/protocols_screen.dart';
-import '../screens/water_meter/water_meter_screen.dart';
-import '../screens/vehicles/vehicles_screen.dart';
 import '../screens/documents/documents_screen.dart';
-import '../screens/projects/projects_screen.dart';
-import '../screens/tickets/tickets_screen.dart';
+import '../screens/home/home_screen.dart';
 import '../screens/marketplace/marketplace_screen.dart';
 import '../screens/notifications/notifications_screen.dart';
+import '../screens/profile/profile_screen.dart';
+import '../screens/projects/projects_screen.dart';
+import '../screens/protocols/protocols_screen.dart';
+import '../screens/splash/splash_screen.dart';
+import '../screens/tickets/tickets_screen.dart';
+import '../screens/vehicles/vehicles_screen.dart';
+import '../screens/visitors/visitors_screen.dart';
+import '../screens/water_meter/water_meter_screen.dart';
 
-/// Rotas nomeadas do aplicativo
+/// Rotas nomeadas do aplicativo.
 class AppRoutes {
-  static const String splash       = '/';
-  static const String login        = '/login';
+  static const String splash = '/';
+  static const String login = '/login';
   static const String forgotPassword = '/forgot-password';
-  // Shell routes (dentro do HomeScreen com bottom nav)
-  static const String home         = '/home';
-  static const String profile      = '/home/profile';
-  static const String visitors     = '/home/visitors';
-  static const String access       = '/home/access';
-  static const String dependents   = '/home/dependents';
-  static const String protocols    = '/home/protocols';
-  static const String waterMeter   = '/home/water-meter';
-  static const String vehicles     = '/home/vehicles';
-  static const String documents    = '/home/documents';
-  static const String projects     = '/home/projects';
-  static const String tickets      = '/home/tickets';
-  static const String marketplace  = '/home/marketplace';
+
+  static const String home = '/home';
+  static const String profile = '/home/profile';
+  static const String visitors = '/home/visitors';
+  static const String access = '/home/access';
+  static const String dependents = '/home/dependents';
+  static const String protocols = '/home/protocols';
+  static const String waterMeter = '/home/water-meter';
+  static const String vehicles = '/home/vehicles';
+  static const String documents = '/home/documents';
+  static const String projects = '/home/projects';
+  static const String tickets = '/home/tickets';
+  static const String marketplace = '/home/marketplace';
   static const String notifications = '/home/notifications';
 }
 
-/// Configuração do roteador GoRouter com redirect automático
+/// Atualiza o redirect do GoRouter sem recriar o roteador nem perder a árvore
+/// de navegação quando o estado de autenticação muda.
+class _AuthRouterRefresh extends ChangeNotifier {
+  void refresh() => notifyListeners();
+}
+
+final _authRouterRefreshProvider = Provider<_AuthRouterRefresh>((ref) {
+  final refresh = _AuthRouterRefresh();
+  ref.listen<AuthState>(authProvider, (_, next) {
+    developer.log(
+      'auth=${next.status.name}; solicitando atualização de rota',
+      name: 'Router',
+    );
+    refresh.refresh();
+  });
+  ref.onDispose(refresh.dispose);
+  return refresh;
+});
+
+/// O roteador é criado uma única vez. A versão anterior observava diretamente
+/// [authProvider] e recriava todo o GoRouter após o login, concorrendo com a
+/// navegação da tela de autenticação e podendo deixar a UI sem responder.
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final authState = ref.watch(authProvider);
+  final refresh = ref.watch(_authRouterRefreshProvider);
 
-  return GoRouter(
-    initialLocation: AppRoutes.login,
+  final router = GoRouter(
+    initialLocation: AppRoutes.splash,
     debugLogDiagnostics: false,
+    refreshListenable: refresh,
     redirect: (context, state) {
-      final isAuthenticated = authState.isAuthenticated;
-      final isLoading       = authState.isLoading;
-      final currentPath     = state.matchedLocation;
-
+      final authState = ref.read(authProvider);
+      final currentPath = state.matchedLocation;
       final isPublicPage = currentPath == AppRoutes.login ||
           currentPath == AppRoutes.forgotPassword ||
           currentPath == AppRoutes.splash;
 
-      // Nunca redirecionar enquanto carrega
-      if (isLoading) return null;
+      // A SplashScreen decide a restauração de sessão. Não navegar durante a
+      // fase de loading evita loops e preserva uma tela responsiva.
+      if (authState.isLoading || currentPath == AppRoutes.splash) return null;
 
-      // Não autenticado tentando acessar página protegida → login
-      if (!isAuthenticated && !isPublicPage) return AppRoutes.login;
-
-      // Autenticado na tela de login → dashboard
-      if (isAuthenticated && currentPath == AppRoutes.login) {
-        return AppRoutes.home;
+      if (!authState.isAuthenticated && !isPublicPage) {
+        return AppRoutes.login;
       }
 
+      if (authState.isAuthenticated &&
+          (currentPath == AppRoutes.login ||
+              currentPath == AppRoutes.forgotPassword)) {
+        return AppRoutes.home;
+      }
       return null;
     },
     routes: [
@@ -92,7 +117,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           GoRoute(
             path: AppRoutes.home,
             name: 'home',
-            // Dashboard: mostra dados da sessão sem chamada de rede
             builder: (context, state) => const DashboardScreen(),
           ),
           GoRoute(
@@ -176,4 +200,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ),
   );
+  ref.onDispose(router.dispose);
+  return router;
 });

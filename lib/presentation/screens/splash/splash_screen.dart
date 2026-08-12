@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -45,10 +47,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (!mounted) return;
     final authState = ref.read(authProvider);
     if (authState.isAuthenticated) {
-      await ref
-          .read(notificationManagerProvider)
-          .syncAfterAuthenticatedSession();
-      if (!mounted) return;
+      // A sincronização de push é opcional e não pode atrasar o Dashboard.
+      unawaited(
+        ref.read(notificationManagerProvider).syncAfterAuthenticatedSession(),
+      );
       context.go(AppRoutes.home);
     } else {
       context.go(AppRoutes.login);

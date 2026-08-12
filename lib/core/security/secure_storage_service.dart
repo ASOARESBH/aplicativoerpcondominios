@@ -1,32 +1,32 @@
+import 'dart:convert';
+
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 import '../constants/app_constants.dart';
 
-/// Serviço de armazenamento seguro para dados sensíveis (token, credenciais).
+/// Serviço de armazenamento seguro para o token e os dados da sessão.
 ///
-/// NOTA: A URL base não é mais armazenada aqui.
-/// O sistema usa URL FIXA: [AppConstants.baseUrl]
-/// O tenant é identificado pelo token Bearer, não pela URL.
+/// Os dados do morador são persistidos como um único documento JSON. Isso evita
+/// várias operações concorrentes no Android Keystore logo após o login, fluxo
+/// que pode sobrecarregar dispositivos de entrada e interromper a transição de
+/// tela. A leitura dos campos legados permanece para instalações antigas.
 class SecureStorageService {
   static const FlutterSecureStorage _storage = FlutterSecureStorage(
     aOptions: AndroidOptions(encryptedSharedPreferences: true),
     iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
   );
 
-  // ─── Token / Auth ──────────────────────────────────────────────────────────
-
   Future<void> saveAuthToken(String token) async {
     await _storage.write(key: AppConstants.keyAuthToken, value: token);
   }
 
   Future<String?> getAuthToken() async {
-    return await _storage.read(key: AppConstants.keyAuthToken);
+    return _storage.read(key: AppConstants.keyAuthToken);
   }
 
   Future<void> deleteAuthToken() async {
     await _storage.delete(key: AppConstants.keyAuthToken);
   }
-
-  // ─── Morador Data ──────────────────────────────────────────────────────────
 
   Future<void> saveMoradorData({
     required String moradorId,
@@ -34,31 +34,49 @@ class SecureStorageService {
     required String unidade,
     String? email,
   }) async {
-    await Future.wait([
-      _storage.write(key: AppConstants.keyMoradorId, value: moradorId),
-      _storage.write(key: AppConstants.keyMoradorNome, value: nome),
-      _storage.write(key: AppConstants.keyMoradorUnidade, value: unidade),
-      if (email != null)
-        _storage.write(key: AppConstants.keyMoradorEmail, value: email),
-    ]);
+    final data = <String, String?>{
+      'moradorId': moradorId,
+      'nome': nome,
+      'unidade': unidade,
+      'email': email,
+    };
+    await _storage.write(
+      key: AppConstants.keyMoradorSession,
+      value: jsonEncode(data),
+    );
   }
 
   Future<Map<String, String?>> getMoradorData() async {
-    final results = await Future.wait([
-      _storage.read(key: AppConstants.keyMoradorId),
-      _storage.read(key: AppConstants.keyMoradorNome),
-      _storage.read(key: AppConstants.keyMoradorUnidade),
-      _storage.read(key: AppConstants.keyMoradorEmail),
-    ]);
+    final storedSession =
+        await _storage.read(key: AppConstants.keyMoradorSession);
+    if (storedSession != null && storedSession.isNotEmpty) {
+      try {
+        final decoded = jsonDecode(storedSession);
+        if (decoded is Map) {
+          return {
+            'moradorId': decoded['moradorId']?.toString(),
+            'nome': decoded['nome']?.toString(),
+            'unidade': decoded['unidade']?.toString(),
+            'email': decoded['email']?.toString(),
+          };
+        }
+      } catch (_) {
+        // O fallback abaixo preserva sessões gravadas por versões antigas.
+      }
+    }
+
+    // Compatibilidade com dados gravados antes da sessão unificada.
+    final moradorId = await _storage.read(key: AppConstants.keyMoradorId);
+    final nome = await _storage.read(key: AppConstants.keyMoradorNome);
+    final unidade = await _storage.read(key: AppConstants.keyMoradorUnidade);
+    final email = await _storage.read(key: AppConstants.keyMoradorEmail);
     return {
-      'moradorId': results[0],
-      'nome':      results[1],
-      'unidade':   results[2],
-      'email':     results[3],
+      'moradorId': moradorId,
+      'nome': nome,
+      'unidade': unidade,
+      'email': email,
     };
   }
-
-  // ─── Preferências ─────────────────────────────────────────────────────────
 
   Future<void> setBiometricEnabled(bool enabled) async {
     await _storage.write(
@@ -84,19 +102,18 @@ class SecureStorageService {
     return val == '1';
   }
 
-  // ─── Limpeza ──────────────────────────────────────────────────────────────
-
   Future<void> clearAll() async {
     await _storage.deleteAll();
   }
 
   Future<void> clearSession() async {
-    await Future.wait([
-      _storage.delete(key: AppConstants.keyAuthToken),
-      _storage.delete(key: AppConstants.keyMoradorId),
-      _storage.delete(key: AppConstants.keyMoradorNome),
-      _storage.delete(key: AppConstants.keyMoradorUnidade),
-      _storage.delete(key: AppConstants.keyMoradorEmail),
-    ]);
+    // Operações sequenciais preservam estabilidade no Keystore de aparelhos
+    // que não lidam bem com exclusões criptográficas em paralelo.
+    await _storage.delete(key: AppConstants.keyAuthToken);
+    await _storage.delete(key: AppConstants.keyMoradorSession);
+    await _storage.delete(key: AppConstants.keyMoradorId);
+    await _storage.delete(key: AppConstants.keyMoradorNome);
+    await _storage.delete(key: AppConstants.keyMoradorUnidade);
+    await _storage.delete(key: AppConstants.keyMoradorEmail);
   }
 }

@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/constants/app_constants.dart';
@@ -61,10 +62,23 @@ class NotificationManager {
   /// Deve ser chamado após login ou restauração de sessão. Reativa o token
   /// existente somente se o morador já havia permitido os alertas antes.
   Future<void> syncAfterAuthenticatedSession() async {
-    if (!await _notificationService.areDeviceAlertsEnabled()) return;
-    final token = await _notificationService.getCurrentFcmToken();
-    if (token == null || token.isEmpty) return;
-    await _registerTokenSilently(token);
+    try {
+      final enabled = await _notificationService.areDeviceAlertsEnabled();
+      if (!enabled) {
+        debugPrint('[PushSync] alertas desabilitados; sincronização ignorada');
+        return;
+      }
+      final token = await _notificationService.getCurrentFcmToken();
+      if (token == null || token.isEmpty) {
+        debugPrint('[PushSync] token FCM indisponível; sincronização adiada');
+        return;
+      }
+      await _registerTokenSilently(token);
+      debugPrint('[PushSync] dispositivo sincronizado com sucesso');
+    } catch (error) {
+      // Push não é requisito para abrir o app; nunca propaga falhas ao login.
+      debugPrint('[PushSync] falha isolada: $error');
+    }
   }
 
   Future<void> _registerTokenSilently(String token) async {
