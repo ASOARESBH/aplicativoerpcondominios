@@ -69,6 +69,18 @@ class EmployeeApiClient {
     );
   }
 
+  /// Envio multipart para evidências fotográficas. O Content-Type é delegado ao
+  /// FormData, preservando o limite e a validação de MIME no servidor.
+  Future<Response<dynamic>> postForm(String action, FormData data) async {
+    final token = await _requireToken();
+    return _dio.post(
+      AppConstants.endpointColaborador,
+      queryParameters: {'action': action},
+      data: data,
+      options: Options(headers: {'Authorization': 'Bearer $token'}),
+    );
+  }
+
   Future<String> _requireToken() async {
     final token = await _storage.getColaboradorToken();
     if (token == null || token.isEmpty) {

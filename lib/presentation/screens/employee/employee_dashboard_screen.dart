@@ -144,6 +144,13 @@ class _EmployeeDashboardScreenState
               ),
               _module(
                 context,
+                icon: Icons.water_drop_outlined,
+                title: 'Leitura de água',
+                subtitle: 'Lançar hidrômetro',
+                route: '/employee/water-meter',
+              ),
+              _module(
+                context,
                 icon: Icons.list_alt_outlined,
                 title: 'Meus chamados',
                 subtitle: 'Acompanhar solicitações',

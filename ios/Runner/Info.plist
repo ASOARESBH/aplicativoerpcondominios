@@ -46,7 +46,7 @@
 <key>UIViewControllerBasedStatusBarAppearance</key>
 <false/>
 <key>NSCameraUsageDescription</key>
-<string>O ERP Condomínios precisa acessar a câmera para escanear QR Codes e enviar fotos nos chamados.</string>
+<string>O ERP Condomínios precisa acessar a câmera para escanear QR Codes, fotografar hidrômetros e enviar evidências de leitura.</string>
 <key>NSPhotoLibraryUsageDescription</key>
 <string>O ERP Condomínios precisa acessar a galeria para enviar fotos nos chamados e ocorrências.</string>
 <key>NSFaceIDUsageDescription</key>

@@ -19,6 +19,8 @@ import '../screens/employee/employee_protocols_screen.dart';
 import '../screens/employee/employee_receive_protocol_screen.dart';
 import '../screens/employee/employee_qr_scanner_screen.dart';
 import '../screens/employee/employee_tickets_screen.dart';
+import '../screens/employee/employee_water_meter_read_screen.dart';
+import '../screens/employee/employee_water_meter_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/marketplace/marketplace_screen.dart';
 import '../screens/notifications/notifications_screen.dart';
@@ -38,6 +40,7 @@ class AppRoutes {
   static const String forgotPassword = '/forgot-password';
   static const String employeeLogin = '/employee/login';
   static const String employeeHome = '/employee';
+  static const String employeeWaterMeter = '/employee/water-meter';
 
   static const String home = '/home';
   static const String profile = '/home/profile';
@@ -164,6 +167,28 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/employee/scan',
             name: 'employee-scan',
             builder: (context, state) => const EmployeeQrScannerScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.employeeWaterMeter,
+            name: 'employee-water-meter',
+            builder: (context, state) => const EmployeeWaterMeterScreen(),
+          ),
+          GoRoute(
+            path: '/employee/water-meter/read',
+            name: 'employee-water-meter-read',
+            builder: (context, state) {
+              final selection = state.extra;
+              if (selection is! Map) {
+                return const Scaffold(
+                  body: Center(
+                      child: Text(
+                          'Selecione um hidrômetro antes de lançar a leitura.')),
+                );
+              }
+              return EmployeeWaterMeterReadScreen(
+                selection: Map<String, dynamic>.from(selection),
+              );
+            },
           ),
           GoRoute(
             path: '/employee/deliver',

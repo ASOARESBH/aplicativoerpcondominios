@@ -78,6 +78,9 @@ class AppConstants {
   static const String actionBuscarProtocoloQr = 'buscar_protocolo_qr';
   static const String actionReceberProtocolo = 'receber_protocolo';
   static const String actionEntregarProtocolo = 'entregar_protocolo';
+  static const String actionHidrometrosLeiturista = 'hidrometros_leiturista';
+  static const String actionFotoHidrometro = 'foto_hidrometro';
+  static const String actionRegistrarLeituraHidrometro = 'registrar_leitura_hidrometro';
 
   // ─── Storage Keys (Secure Storage) ───────────────────────────────────────
   static const String keyAuthToken = 'portal_token';
