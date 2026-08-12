@@ -11,6 +11,9 @@ import '../screens/auth/login_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/dependents/dependents_screen.dart';
 import '../screens/documents/documents_screen.dart';
+import '../screens/employee/employee_dashboard_screen.dart';
+import '../screens/employee/employee_login_screen.dart';
+import '../screens/employee/employee_shell_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/marketplace/marketplace_screen.dart';
 import '../screens/notifications/notifications_screen.dart';
@@ -28,6 +31,8 @@ class AppRoutes {
   static const String splash = '/';
   static const String login = '/login';
   static const String forgotPassword = '/forgot-password';
+  static const String employeeLogin = '/employee/login';
+  static const String employeeHome = '/employee';
 
   static const String home = '/home';
   static const String profile = '/home/profile';
@@ -79,6 +84,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final isPublicPage = currentPath == AppRoutes.login ||
           currentPath == AppRoutes.forgotPassword ||
           currentPath == AppRoutes.splash;
+      final isEmployeeRoute = currentPath.startsWith('/employee');
+
+      // O Portal do Colaborador possui sessão Bearer própria e não pode ser
+      // redirecionado pelo estado da sessão do morador.
+      if (isEmployeeRoute) return null;
 
       // A SplashScreen decide a restauração de sessão. Não navegar durante a
       // fase de loading evita loops e preserva uma tela responsiva.
@@ -110,6 +120,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.forgotPassword,
         name: 'forgot-password',
         builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.employeeLogin,
+        name: 'employee-login',
+        builder: (context, state) => const EmployeeLoginScreen(),
+      ),
+      ShellRoute(
+        builder: (context, state, child) => EmployeeShellScreen(child: child),
+        routes: [
+          GoRoute(
+            path: AppRoutes.employeeHome,
+            name: 'employee-home',
+            builder: (context, state) => const EmployeeDashboardScreen(),
+          ),
+        ],
       ),
       ShellRoute(
         builder: (context, state, child) => HomeScreen(child: child),

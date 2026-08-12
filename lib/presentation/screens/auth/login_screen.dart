@@ -27,6 +27,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
   final _cpfController = TextEditingController();
   final _senhaController = TextEditingController();
   bool _obscureSenha = true;
+  int _logoTapCount = 0;
+  Timer? _logoTapResetTimer;
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
 
@@ -44,8 +46,22 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     _animController.forward();
   }
 
+  void _handleLogoTap() {
+    _logoTapResetTimer?.cancel();
+    _logoTapCount++;
+    if (_logoTapCount >= 5) {
+      _logoTapCount = 0;
+      if (mounted) context.push('/employee/login');
+      return;
+    }
+    _logoTapResetTimer = Timer(const Duration(seconds: 3), () {
+      _logoTapCount = 0;
+    });
+  }
+
   @override
   void dispose() {
+    _logoTapResetTimer?.cancel();
     _cpfController.dispose();
     _senhaController.dispose();
     _animController.dispose();
@@ -112,28 +128,35 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                       const SizedBox(height: 32),
 
                       // ── Logo ──────────────────────────────────────────
-                      Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(28),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withAlpha(50),
-                              blurRadius: 24,
-                              offset: const Offset(0, 10),
+                      Semantics(
+                        button: true,
+                        label: 'Logo ERP Condomínios',
+                        child: GestureDetector(
+                          onTap: _handleLogoTap,
+                          child: Container(
+                            width: 120,
+                            height: 120,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(28),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withAlpha(50),
+                                  blurRadius: 24,
+                                  offset: const Offset(0, 10),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        padding: const EdgeInsets.all(14),
-                        child: Image.asset(
-                          'assets/images/logo.png',
-                          fit: BoxFit.contain,
-                          errorBuilder: (_, __, ___) => const Icon(
-                            Icons.apartment_rounded,
-                            color: AppTheme.primary,
-                            size: 64,
+                            padding: const EdgeInsets.all(14),
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              fit: BoxFit.contain,
+                              errorBuilder: (_, __, ___) => const Icon(
+                                Icons.apartment_rounded,
+                                color: AppTheme.primary,
+                                size: 64,
+                              ),
+                            ),
                           ),
                         ),
                       ),

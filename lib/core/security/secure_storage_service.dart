@@ -78,6 +78,37 @@ class SecureStorageService {
     };
   }
 
+  Future<void> saveColaboradorSession({
+    required String token,
+    required Map<String, dynamic> session,
+  }) async {
+    await _storage.write(key: AppConstants.keyColaboradorToken, value: token);
+    await _storage.write(
+      key: AppConstants.keyColaboradorSession,
+      value: jsonEncode(session),
+    );
+  }
+
+  Future<String?> getColaboradorToken() async {
+    return _storage.read(key: AppConstants.keyColaboradorToken);
+  }
+
+  Future<Map<String, dynamic>?> getColaboradorSession() async {
+    final raw = await _storage.read(key: AppConstants.keyColaboradorSession);
+    if (raw == null || raw.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(raw);
+      return decoded is Map ? Map<String, dynamic>.from(decoded) : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> clearColaboradorSession() async {
+    await _storage.delete(key: AppConstants.keyColaboradorToken);
+    await _storage.delete(key: AppConstants.keyColaboradorSession);
+  }
+
   Future<void> setBiometricEnabled(bool enabled) async {
     await _storage.write(
       key: AppConstants.keyBiometricEnabled,

@@ -37,6 +37,9 @@ class AppConstants {
   static const String endpointNotificacoes =
       '/api/api_morador_notificacoes.php';
 
+  // ─── Portal do Colaborador ────────────────────────────────────────────────
+  static const String endpointColaborador = '/api/api_colaborador_mobile.php';
+
   // ─── Actions dos Endpoints ────────────────────────────────────────────────
   // api_portal.php
   static const String actionLogin = 'login';
@@ -63,6 +66,19 @@ class AppConstants {
   static const String actionBuscarOS = 'buscar';
   static const String actionInteracoes = 'listar_interacoes';
 
+  // api_colaborador_mobile.php
+  static const String actionLoginColaborador = 'login';
+  static const String actionSessaoColaborador = 'sessao';
+  static const String actionDashboardColaborador = 'dashboard';
+  static const String actionMoradoresColaborador = 'moradores';
+  static const String actionAssuntosColaborador = 'assuntos';
+  static const String actionChamadosColaborador = 'chamados';
+  static const String actionAbrirChamadoColaborador = 'abrir_chamado';
+  static const String actionProtocolosColaborador = 'protocolos';
+  static const String actionBuscarProtocoloQr = 'buscar_protocolo_qr';
+  static const String actionReceberProtocolo = 'receber_protocolo';
+  static const String actionEntregarProtocolo = 'entregar_protocolo';
+
   // ─── Storage Keys (Secure Storage) ───────────────────────────────────────
   static const String keyAuthToken = 'portal_token';
   static const String keyMoradorSession = 'morador_session';
@@ -72,6 +88,8 @@ class AppConstants {
   static const String keyMoradorEmail = 'morador_email';
   static const String keyBiometricEnabled = 'biometric_enabled';
   static const String keyDarkMode = 'dark_mode';
+  static const String keyColaboradorToken = 'colaborador_token';
+  static const String keyColaboradorSession = 'colaborador_session';
 
   // ─── Session ──────────────────────────────────────────────────────────────
   static const int sessionTimeoutDays = 7;

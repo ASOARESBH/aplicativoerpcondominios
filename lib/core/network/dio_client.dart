@@ -18,8 +18,10 @@ class DioClient {
       BaseOptions(
         // URL FIXA — multi-tenant por token, não por URL
         baseUrl: AppConstants.baseUrl,
-        connectTimeout: const Duration(milliseconds: AppConstants.connectTimeoutMs),
-        receiveTimeout: const Duration(milliseconds: AppConstants.receiveTimeoutMs),
+        connectTimeout:
+            const Duration(milliseconds: AppConstants.connectTimeoutMs),
+        receiveTimeout:
+            const Duration(milliseconds: AppConstants.receiveTimeoutMs),
         headers: {
           'Content-Type': 'application/json',
           'Accept': 'application/json',
@@ -32,9 +34,11 @@ class DioClient {
     _dio.interceptors.addAll([
       _AuthInterceptor(_secureStorage),
       _ErrorInterceptor(),
+      // Nunca registrar corpos de requisição/resposta: podem conter senha,
+      // token de morador ou token do colaborador.
       LogInterceptor(
-        requestBody: true,
-        responseBody: true,
+        requestBody: false,
+        responseBody: false,
         logPrint: (obj) => _log('[DioClient] $obj'),
       ),
     ]);
