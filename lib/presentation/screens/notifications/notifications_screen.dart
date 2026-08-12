@@ -72,7 +72,13 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               .map((item) => Map<String, dynamic>.from(item))
               .toList()
           : <Map<String, dynamic>>[];
-      if (mounted) setState(() => _notifications = list);
+      if (mounted) {
+        debugPrint(
+          '[Notifications] ${list.length} aviso(s) carregado(s); '
+          '${list.where((item) => !_asBool(item['lida'])).length} não lido(s).',
+        );
+        setState(() => _notifications = list);
+      }
     } catch (error) {
       if (mounted) setState(() => _error = _friendlyError(error));
     } finally {
@@ -219,8 +225,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                     : 'Todos os avisos foram lidos',
                 style: TextStyle(
                   fontWeight: FontWeight.w600,
-                  color:
-                      unreadCount > 0 ? AppTheme.primary : Colors.grey.shade700,
+                  color: unreadCount > 0
+                      ? AppTheme.primary
+                      : Theme.of(context).colorScheme.onSurfaceVariant,
                 ),
               ),
               const SizedBox(height: 10),
@@ -233,8 +240,17 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
   }
 
   Widget _buildDeviceAlertsCard() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final background = _deviceAlertsEnabled
+        ? (isDark ? const Color(0xFF1E3A5F) : AppTheme.primaryLight)
+        : Theme.of(context).cardTheme.color;
+    final titleColor =
+        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF1E293B);
+    final subtitleColor =
+        isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569);
+
     return Card(
-      color: _deviceAlertsEnabled ? AppTheme.primaryLight : null,
+      color: background,
       child: SwitchListTile.adaptive(
         value: _deviceAlertsEnabled,
         onChanged: _isSavingPreference ? null : _toggleDeviceAlerts,
@@ -253,9 +269,9 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
             color: _deviceAlertsEnabled ? AppTheme.primary : Colors.grey,
           ),
         ),
-        title: const Text(
+        title: Text(
           'Alertas no dispositivo',
-          style: TextStyle(fontWeight: FontWeight.w700),
+          style: TextStyle(color: titleColor, fontWeight: FontWeight.w700),
         ),
         subtitle: Text(
           _isSavingPreference
@@ -263,6 +279,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
               : _deviceAlertsEnabled
                   ? 'Você será avisado quando uma encomenda chegar ou for entregue.'
                   : 'Ative para receber avisos no display do celular.',
+          style: TextStyle(color: subtitleColor),
         ),
       ),
     );
@@ -276,11 +293,21 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
         (isDelivered ? 'Mercadoria recebida' : 'Sua encomenda chegou');
     final body = notification['mensagem']?.toString() ?? '';
     final timestamp = _formatDate(notification['criado_em']?.toString());
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final cardColor = isRead
+        ? Theme.of(context).cardTheme.color
+        : (isDark ? const Color(0xFF1E3A5F) : AppTheme.primaryLight);
+    final titleColor =
+        isDark ? const Color(0xFFF8FAFC) : const Color(0xFF1E293B);
+    final bodyColor =
+        isDark ? const Color(0xFFE2E8F0) : const Color(0xFF475569);
+    final dateColor =
+        isDark ? const Color(0xFFCBD5E1) : const Color(0xFF64748B);
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 10),
       child: Card(
-        color: isRead ? null : AppTheme.primaryLight,
+        color: cardColor,
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () => _markAsRead(notification),
@@ -315,6 +342,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                             child: Text(
                               title,
                               style: TextStyle(
+                                color: titleColor,
                                 fontWeight:
                                     isRead ? FontWeight.w600 : FontWeight.w800,
                                 fontSize: 15,
@@ -333,13 +361,18 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> {
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text(body,
-                          style: const TextStyle(fontSize: 13, height: 1.35)),
+                      Text(
+                        body,
+                        style: TextStyle(
+                          color: bodyColor,
+                          fontSize: 13,
+                          height: 1.35,
+                        ),
+                      ),
                       const SizedBox(height: 7),
                       Text(
                         timestamp,
-                        style: TextStyle(
-                            fontSize: 11, color: Colors.grey.shade600),
+                        style: TextStyle(fontSize: 11, color: dateColor),
                       ),
                     ],
                   ),
