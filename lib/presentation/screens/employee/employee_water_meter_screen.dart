@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:developer' as developer;
 
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -29,6 +30,7 @@ class _EmployeeWaterMeterScreenState
   bool _loadingMeters = false;
   List<Map<String, dynamic>> _residents = const [];
   List<Map<String, dynamic>> _meters = const [];
+  String? _metersMessage;
   Map<String, dynamic>? _resident;
   final _offline = WaterMeterOfflineService();
   StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
@@ -144,6 +146,7 @@ class _EmployeeWaterMeterScreenState
       _resident = resident;
       _residents = const [];
       _meters = const [];
+      _metersMessage = null;
       _searchController.text = resident['nome']?.toString() ?? '';
       _loadingMeters = true;
     });
@@ -157,20 +160,27 @@ class _EmployeeWaterMeterScreenState
           data['sucesso'] == true &&
           data['dados'] is List &&
           mounted) {
-        setState(
-          () => _meters = (data['dados'] as List)
+        setState(() {
+          _meters = (data['dados'] as List)
               .whereType<Map>()
               .map((item) =>
                   item.map((key, value) => MapEntry(key.toString(), value)))
-              .toList(),
-        );
+              .toList();
+          _metersMessage = _meters.isEmpty
+              ? 'Este morador não possui hidrômetro ativo cadastrado. Verifique o cadastro de hidrômetros no ERP.'
+              : null;
+        });
       } else {
-        _show(_message(data), danger: true);
+        final message = _message(data);
+        if (mounted) setState(() => _metersMessage = message);
+        _show(message, danger: true);
       }
     } catch (error) {
-      developer.log('Falha ao consultar hidrômetros: $error',
+      final message = _message(error);
+      developer.log('Falha ao consultar hidrômetros: $message',
           name: 'Leiturista');
-      _show(_message(error), danger: true);
+      if (mounted) setState(() => _metersMessage = message);
+      _show(message, danger: true);
     } finally {
       if (mounted) setState(() => _loadingMeters = false);
     }
@@ -288,11 +298,30 @@ class _EmployeeWaterMeterScreenState
               child: CircularProgressIndicator(),
             ))
           else if (_meters.isEmpty)
-            const Card(
+            Card(
               child: Padding(
-                padding: EdgeInsets.all(20),
-                child: Text(
-                    'Nenhum hidrômetro ativo foi encontrado para este morador.'),
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  children: [
+                    Icon(
+                      Icons.water_drop_outlined,
+                      size: 36,
+                      color: Theme.of(context).colorScheme.outline,
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      _metersMessage ??
+                          'Nenhum hidrômetro ativo foi encontrado para este morador.',
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 10),
+                    TextButton.icon(
+                      onPressed: () => _selectResident(_resident!),
+                      icon: const Icon(Icons.refresh_rounded),
+                      label: const Text('TENTAR NOVAMENTE'),
+                    ),
+                  ],
+                ),
               ),
             )
           else
@@ -335,6 +364,7 @@ class _EmployeeWaterMeterScreenState
           onPressed: () => setState(() {
             _resident = null;
             _meters = const [];
+            _metersMessage = null;
             _searchController.clear();
           }),
         ),
@@ -419,6 +449,9 @@ class _EmployeeWaterMeterScreenState
   }
 
   String _message(dynamic value) {
+    if (value is DioException) {
+      return _message(value.response?.data);
+    }
     if (value is Map && value['mensagem'] != null) {
       return value['mensagem'].toString();
     }
