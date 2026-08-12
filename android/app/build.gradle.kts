@@ -5,6 +5,12 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// O projeto continua compilando sem Firebase. Ao adicionar o arquivo oficial
+// android/app/google-services.json, o plugin é ativado automaticamente.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
     namespace = "br.com.erpcondominios"
     compileSdk = flutter.compileSdkVersion

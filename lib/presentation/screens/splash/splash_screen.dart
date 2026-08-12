@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/notification_provider.dart';
 import '../../router/app_router.dart';
 
 /// Tela de splash com verificação de sessão
@@ -44,7 +45,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen>
     if (!mounted) return;
     final authState = ref.read(authProvider);
     if (authState.isAuthenticated) {
-      context.go(AppRoutes.profile);
+      await ref
+          .read(notificationManagerProvider)
+          .syncAfterAuthenticatedSession();
+      if (!mounted) return;
+      context.go(AppRoutes.home);
     } else {
       context.go(AppRoutes.login);
     }

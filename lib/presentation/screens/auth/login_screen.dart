@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/notification_provider.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../../core/constants/app_constants.dart';
 
@@ -20,10 +21,10 @@ class LoginScreen extends ConsumerStatefulWidget {
 
 class _LoginScreenState extends ConsumerState<LoginScreen>
     with SingleTickerProviderStateMixin {
-  final _formKey         = GlobalKey<FormState>();
-  final _cpfController   = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  final _cpfController = TextEditingController();
   final _senhaController = TextEditingController();
-  bool _obscureSenha     = true;
+  bool _obscureSenha = true;
   late AnimationController _animController;
   late Animation<double> _fadeAnim;
 
@@ -53,13 +54,20 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
     FocusScope.of(context).unfocus();
     if (!_formKey.currentState!.validate()) return;
 
-    final cpf   = _cpfController.text.trim();
+    final cpf = _cpfController.text.trim();
     final senha = _senhaController.text;
 
     await ref.read(authProvider.notifier).login(
-          cpf:      cpf,
+          cpf: cpf,
           password: senha,
         );
+
+    // Reativa o token previamente autorizado sem atrasar a navegação.
+    if (ref.read(authProvider).isAuthenticated) {
+      await ref
+          .read(notificationManagerProvider)
+          .syncAfterAuthenticatedSession();
+    }
   }
 
   @override
@@ -84,7 +92,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
             decoration: const BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
-                end:   Alignment.bottomCenter,
+                end: Alignment.bottomCenter,
                 colors: [AppTheme.primary, AppTheme.primaryDark],
               ),
             ),
@@ -205,24 +213,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   cursorColor: AppTheme.primary,
                                   decoration: InputDecoration(
                                     labelText: 'CPF',
-                                    labelStyle: const TextStyle(color: Colors.black54),
+                                    labelStyle:
+                                        const TextStyle(color: Colors.black54),
                                     hintText: '000.000.000-00',
-                                    hintStyle: const TextStyle(color: Colors.black38),
+                                    hintStyle:
+                                        const TextStyle(color: Colors.black38),
                                     prefixIcon: const Icon(
                                       Icons.person_outline_rounded,
                                       color: Colors.black54,
                                     ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(color: Colors.black26),
+                                      borderSide: const BorderSide(
+                                          color: Colors.black26),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(color: Colors.black26),
+                                      borderSide: const BorderSide(
+                                          color: Colors.black26),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: AppTheme.primary, width: 2),
+                                      borderSide: BorderSide(
+                                          color: AppTheme.primary, width: 2),
                                     ),
                                     filled: true,
                                     fillColor: Colors.white,
@@ -257,22 +270,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen>
                                   cursorColor: AppTheme.primary,
                                   decoration: InputDecoration(
                                     labelText: 'Senha',
-                                    labelStyle: const TextStyle(color: Colors.black54),
+                                    labelStyle:
+                                        const TextStyle(color: Colors.black54),
                                     prefixIcon: const Icon(
                                       Icons.lock_outline_rounded,
                                       color: Colors.black54,
                                     ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(color: Colors.black26),
+                                      borderSide: const BorderSide(
+                                          color: Colors.black26),
                                     ),
                                     enabledBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: const BorderSide(color: Colors.black26),
+                                      borderSide: const BorderSide(
+                                          color: Colors.black26),
                                     ),
                                     focusedBorder: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(12),
-                                      borderSide: BorderSide(color: AppTheme.primary, width: 2),
+                                      borderSide: BorderSide(
+                                          color: AppTheme.primary, width: 2),
                                     ),
                                     filled: true,
                                     fillColor: Colors.white,

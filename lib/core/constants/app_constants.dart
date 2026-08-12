@@ -9,7 +9,7 @@ class AppConstants {
   AppConstants._();
 
   // ─── App Info ─────────────────────────────────────────────────────────────
-  static const String appName    = 'ERP Condomínios';
+  static const String appName = 'ERP Condomínios';
   static const String appVersion = '1.0.0';
   static const String appPackage = 'br.com.erpcondominios';
 
@@ -18,63 +18,68 @@ class AppConstants {
   static const String baseUrl = 'https://app.erpcondominios.com.br';
 
   // ─── Endpoints de Autenticação ────────────────────────────────────────────
-  static const String endpointLogin         = '/api/api_portal.php';
+  static const String endpointLogin = '/api/api_portal.php';
   static const String endpointVerifySession = '/api/api_portal.php';
-  static const String endpointLogout        = '/api/logout_morador.php';
+  static const String endpointLogout = '/api/logout_morador.php';
   static const String endpointPasswordRecovery = '/api/api_recuperar_senha.php';
 
   // ─── Endpoints do Portal do Morador ──────────────────────────────────────
-  static const String endpointPortal        = '/api/api_portal_morador.php';
-  static const String endpointDependentes   = '/api/api_portal_dependentes.php';
-  static const String endpointAcessos       = '/api/api_acessos_visitantes.php';
-  static const String endpointHidrometro    = '/api/api_morador_hidrometro.php';
-  static const String endpointDocumentos    = '/api/api_portal_documentos.php';
-  static const String endpointProjetos      = '/api/api_portal_projetos.php';
-  static const String endpointMarketplace   = '/api/api_portal_marketplace.php';
-  static const String endpointOS            = '/api/api_portal_os.php';
-  static const String endpointProtocolos    = '/api/api_morador_protocolos.php';
-  static const String endpointPushToken     = '/api/api_pwa_push.php';
-  static const String endpointNotificacoes  = '/api/api_morador_notificacoes.php';
+  static const String endpointPortal = '/api/api_portal_morador.php';
+  static const String endpointDependentes = '/api/api_portal_dependentes.php';
+  static const String endpointAcessos = '/api/api_acessos_visitantes.php';
+  static const String endpointHidrometro = '/api/api_morador_hidrometro.php';
+  static const String endpointDocumentos = '/api/api_portal_documentos.php';
+  static const String endpointProjetos = '/api/api_portal_projetos.php';
+  static const String endpointMarketplace = '/api/api_portal_marketplace.php';
+  static const String endpointOS = '/api/api_portal_os.php';
+  static const String endpointProtocolos = '/api/api_morador_protocolos.php';
+  static const String endpointPushToken = '/api/api_pwa_push.php';
+  static const String endpointNotificacoes =
+      '/api/api_morador_notificacoes.php';
 
   // ─── Actions dos Endpoints ────────────────────────────────────────────────
   // api_portal.php
-  static const String actionLogin          = 'login';
-  static const String actionVerifySession  = 'verificar_sessao';
+  static const String actionLogin = 'login';
+  static const String actionVerifySession = 'verificar_sessao';
 
   // api_portal_morador.php
-  static const String actionPerfil         = 'perfil';
-  static const String actionVisitantes     = 'visitantes';
-  static const String actionVeiculos       = 'veiculos';
+  static const String actionPerfil = 'perfil';
+  static const String actionVisitantes = 'visitantes';
+  static const String actionVeiculos = 'veiculos';
+  static const String actionNotificacoes = 'notificacoes';
+  static const String actionMarcarNotificacaoLida = 'marcar_notificacao_lida';
+  static const String actionRegistrarTokenPush = 'registrar_token_push';
+  static const String actionDesativarTokenPush = 'desativar_token_push';
 
   // api_portal_dependentes.php
-  static const String actionListar         = 'listar';
-  static const String actionCriar          = 'criar';
-  static const String actionAtualizar      = 'atualizar';
-  static const String actionExcluir        = 'excluir';
+  static const String actionListar = 'listar';
+  static const String actionCriar = 'criar';
+  static const String actionAtualizar = 'atualizar';
+  static const String actionExcluir = 'excluir';
 
   // api_portal_os.php
   static const String actionListarAssuntos = 'listar_assuntos';
-  static const String actionAbrirOS        = 'abrir';
-  static const String actionBuscarOS       = 'buscar';
-  static const String actionInteracoes     = 'listar_interacoes';
+  static const String actionAbrirOS = 'abrir';
+  static const String actionBuscarOS = 'buscar';
+  static const String actionInteracoes = 'listar_interacoes';
 
   // ─── Storage Keys (Secure Storage) ───────────────────────────────────────
-  static const String keyAuthToken         = 'portal_token';
-  static const String keyMoradorId         = 'morador_id';
-  static const String keyMoradorNome       = 'morador_nome';
-  static const String keyMoradorUnidade    = 'morador_unidade';
-  static const String keyMoradorEmail      = 'morador_email';
-  static const String keyBiometricEnabled  = 'biometric_enabled';
-  static const String keyDarkMode          = 'dark_mode';
+  static const String keyAuthToken = 'portal_token';
+  static const String keyMoradorId = 'morador_id';
+  static const String keyMoradorNome = 'morador_nome';
+  static const String keyMoradorUnidade = 'morador_unidade';
+  static const String keyMoradorEmail = 'morador_email';
+  static const String keyBiometricEnabled = 'biometric_enabled';
+  static const String keyDarkMode = 'dark_mode';
 
   // ─── Session ──────────────────────────────────────────────────────────────
-  static const int sessionTimeoutDays  = 7;
-  static const int maxLoginAttempts    = 5;
+  static const int sessionTimeoutDays = 7;
+  static const int maxLoginAttempts = 5;
 
   // ─── Paginação ────────────────────────────────────────────────────────────
-  static const int defaultPageSize     = 20;
+  static const int defaultPageSize = 20;
 
   // ─── Timeouts de Rede ─────────────────────────────────────────────────────
-  static const int connectTimeoutMs    = 15000;
-  static const int receiveTimeoutMs    = 30000;
+  static const int connectTimeoutMs = 15000;
+  static const int receiveTimeoutMs = 30000;
 }
