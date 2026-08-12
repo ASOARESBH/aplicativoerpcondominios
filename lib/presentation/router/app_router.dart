@@ -12,8 +12,12 @@ import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/dependents/dependents_screen.dart';
 import '../screens/documents/documents_screen.dart';
 import '../screens/employee/employee_dashboard_screen.dart';
+import '../screens/employee/employee_delivery_screen.dart';
 import '../screens/employee/employee_login_screen.dart';
 import '../screens/employee/employee_shell_screen.dart';
+import '../screens/employee/employee_protocols_screen.dart';
+import '../screens/employee/employee_receive_protocol_screen.dart';
+import '../screens/employee/employee_qr_scanner_screen.dart';
 import '../screens/employee/employee_tickets_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/marketplace/marketplace_screen.dart';
@@ -145,6 +149,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             name: 'employee-ticket-new',
             builder: (context, state) =>
                 const EmployeeTicketsScreen(openForm: true),
+          ),
+          GoRoute(
+            path: '/employee/protocols',
+            name: 'employee-protocols',
+            builder: (context, state) => const EmployeeProtocolsScreen(),
+          ),
+          GoRoute(
+            path: '/employee/receive',
+            name: 'employee-receive',
+            builder: (context, state) => const EmployeeReceiveProtocolScreen(),
+          ),
+          GoRoute(
+            path: '/employee/scan',
+            name: 'employee-scan',
+            builder: (context, state) => const EmployeeQrScannerScreen(),
+          ),
+          GoRoute(
+            path: '/employee/deliver',
+            name: 'employee-deliver',
+            builder: (context, state) => EmployeeDeliveryScreen(
+              initialProtocol: state.extra is Map
+                  ? Map<String, dynamic>.from(state.extra as Map)
+                  : null,
+            ),
           ),
         ],
       ),
