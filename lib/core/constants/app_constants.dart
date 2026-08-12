@@ -53,6 +53,7 @@ class AppConstants {
   static const String actionMarcarNotificacaoLida = 'marcar_notificacao_lida';
   static const String actionRegistrarTokenPush = 'registrar_token_push';
   static const String actionDesativarTokenPush = 'desativar_token_push';
+  static const String actionControleAcesso = 'controle_acesso';
 
   // api_portal_dependentes.php
   static const String actionListar = 'listar';
@@ -80,7 +81,8 @@ class AppConstants {
   static const String actionEntregarProtocolo = 'entregar_protocolo';
   static const String actionHidrometrosLeiturista = 'hidrometros_leiturista';
   static const String actionFotoHidrometro = 'foto_hidrometro';
-  static const String actionRegistrarLeituraHidrometro = 'registrar_leitura_hidrometro';
+  static const String actionRegistrarLeituraHidrometro =
+      'registrar_leitura_hidrometro';
 
   // ─── Storage Keys (Secure Storage) ───────────────────────────────────────
   static const String keyAuthToken = 'portal_token';

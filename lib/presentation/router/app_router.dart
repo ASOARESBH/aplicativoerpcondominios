@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../providers/auth_provider.dart';
 import '../screens/access/access_screen.dart';
+import '../screens/access_control/access_control_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
 import '../screens/auth/login_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
@@ -52,6 +53,7 @@ class AppRoutes {
   static const String vehicles = '/home/vehicles';
   static const String documents = '/home/documents';
   static const String projects = '/home/projects';
+  static const String accessControl = '/home/access-control';
   static const String tickets = '/home/tickets';
   static const String marketplace = '/home/marketplace';
   static const String notifications = '/home/notifications';
@@ -253,6 +255,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.projects,
             name: 'projects',
             builder: (context, state) => const ProjectsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.accessControl,
+            name: 'access-control',
+            builder: (context, state) => const AccessControlScreen(),
           ),
           GoRoute(
             path: AppRoutes.tickets,

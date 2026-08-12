@@ -19,23 +19,71 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   // Itens do Bottom Navigation (módulos principais)
   static const _navItems = [
-    _NavItem(icon: Icons.home_outlined,    activeIcon: Icons.home,         label: 'Início',     route: '/home'),
-    _NavItem(icon: Icons.people_outline,   activeIcon: Icons.people,       label: 'Visitantes', route: '/home/visitors'),
-    _NavItem(icon: Icons.build_outlined,   activeIcon: Icons.build,        label: 'Chamados',   route: '/home/tickets'),
-    _NavItem(icon: Icons.person_outline,   activeIcon: Icons.person,       label: 'Perfil',     route: '/home/profile'),
-    _NavItem(icon: Icons.menu,             activeIcon: Icons.menu_open,    label: 'Mais',       route: null),
+    _NavItem(
+        icon: Icons.home_outlined,
+        activeIcon: Icons.home,
+        label: 'Início',
+        route: '/home'),
+    _NavItem(
+        icon: Icons.people_outline,
+        activeIcon: Icons.people,
+        label: 'Visitantes',
+        route: '/home/visitors'),
+    _NavItem(
+        icon: Icons.build_outlined,
+        activeIcon: Icons.build,
+        label: 'Chamados',
+        route: '/home/tickets'),
+    _NavItem(
+        icon: Icons.person_outline,
+        activeIcon: Icons.person,
+        label: 'Perfil',
+        route: '/home/profile'),
+    _NavItem(
+        icon: Icons.menu,
+        activeIcon: Icons.menu_open,
+        label: 'Mais',
+        route: null),
   ];
 
   // Módulos do Drawer (módulos secundários)
   static const _drawerItems = [
-    _DrawerItem(icon: Icons.family_restroom, label: 'Dependentes', route: '/home/dependents'),
-    _DrawerItem(icon: Icons.inventory_2_outlined, label: 'Protocolos', route: '/home/protocols'),
-    _DrawerItem(icon: Icons.directions_car_outlined, label: 'Veículos', route: '/home/vehicles'),
-    _DrawerItem(icon: Icons.folder_outlined, label: 'Documentos', route: '/home/documents'),
-    _DrawerItem(icon: Icons.construction_outlined, label: 'Projetos', route: '/home/projects'),
-    _DrawerItem(icon: Icons.support_agent_outlined, label: 'Chamados', route: '/home/tickets'),
-    _DrawerItem(icon: Icons.store_outlined, label: 'Marketplace', route: '/home/marketplace'),
-    _DrawerItem(icon: Icons.notifications_outlined, label: 'Notificações', route: '/home/notifications'),
+    _DrawerItem(
+        icon: Icons.family_restroom,
+        label: 'Dependentes',
+        route: '/home/dependents'),
+    _DrawerItem(
+        icon: Icons.inventory_2_outlined,
+        label: 'Protocolos',
+        route: '/home/protocols'),
+    _DrawerItem(
+        icon: Icons.directions_car_outlined,
+        label: 'Veículos',
+        route: '/home/vehicles'),
+    _DrawerItem(
+        icon: Icons.folder_outlined,
+        label: 'Documentos',
+        route: '/home/documents'),
+    _DrawerItem(
+        icon: Icons.construction_outlined,
+        label: 'Projetos',
+        route: '/home/projects'),
+    _DrawerItem(
+        icon: Icons.shield_outlined,
+        label: 'Controle de Acesso',
+        route: '/home/access-control'),
+    _DrawerItem(
+        icon: Icons.support_agent_outlined,
+        label: 'Chamados',
+        route: '/home/tickets'),
+    _DrawerItem(
+        icon: Icons.store_outlined,
+        label: 'Marketplace',
+        route: '/home/marketplace'),
+    _DrawerItem(
+        icon: Icons.notifications_outlined,
+        label: 'Notificações',
+        route: '/home/notifications'),
   ];
 
   @override
