@@ -15,6 +15,7 @@ class HomeScreen extends ConsumerStatefulWidget {
 }
 
 class _HomeScreenState extends ConsumerState<HomeScreen> {
+  final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentIndex = 0;
 
   // Itens do Bottom Navigation (módulos principais)
@@ -92,6 +93,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
     final session = authState.session;
 
     return Scaffold(
+      key: _scaffoldKey,
       appBar: AppBar(
         title: Row(
           children: [
@@ -99,7 +101,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.2),
+                color: Colors.white.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
               padding: const EdgeInsets.all(4),
@@ -135,7 +137,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ),
           PopupMenuButton<String>(
             icon: CircleAvatar(
-              backgroundColor: Colors.white.withOpacity(0.2),
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
               radius: 16,
               child: const Icon(Icons.person, color: Colors.white, size: 18),
             ),
@@ -206,8 +208,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         currentIndex: _currentIndex,
         onTap: (index) {
           if (index == 4) {
-            // Abrir Drawer para "Mais"
-            Scaffold.of(context).openDrawer();
+            // O contexto do State fica acima do Scaffold. Usar a chave evita
+            // Scaffold.of(context) em contexto inválido e mantém o app aberto.
+            debugPrint('[Home] Abrindo menu Mais.');
+            _scaffoldKey.currentState?.openDrawer();
             return;
           }
           setState(() => _currentIndex = index);
@@ -240,7 +244,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
               session?.unidade != null ? 'Unidade ${session!.unidade}' : '',
             ),
             currentAccountPicture: CircleAvatar(
-              backgroundColor: Colors.white.withOpacity(0.2),
+              backgroundColor: Colors.white.withValues(alpha: 0.2),
               child: const Icon(Icons.person, color: Colors.white, size: 36),
             ),
           ),

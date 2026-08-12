@@ -39,6 +39,8 @@ class DioClient {
       LogInterceptor(
         requestBody: false,
         responseBody: false,
+        requestHeader: false,
+        responseHeader: false,
         logPrint: (obj) => _log('[DioClient] $obj'),
       ),
     ]);
