@@ -83,6 +83,10 @@ class AppConstants {
   static const String actionFotoHidrometro = 'foto_hidrometro';
   static const String actionRegistrarLeituraHidrometro =
       'registrar_leitura_hidrometro';
+  static const String actionVigilanteQrDetalhe = 'vigilante_qr_detalhe';
+  static const String actionVigilanteRegistrarLeitura =
+      'vigilante_registrar_leitura';
+  static const String actionVigilanteHistoricoHoje = 'vigilante_historico_hoje';
 
   // ─── Storage Keys (Secure Storage) ───────────────────────────────────────
   static const String keyAuthToken = 'portal_token';

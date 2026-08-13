@@ -22,6 +22,7 @@ import '../screens/employee/employee_qr_scanner_screen.dart';
 import '../screens/employee/employee_tickets_screen.dart';
 import '../screens/employee/employee_water_meter_read_screen.dart';
 import '../screens/employee/employee_water_meter_screen.dart';
+import '../screens/employee/employee_vigilante_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/marketplace/marketplace_screen.dart';
 import '../screens/notifications/notifications_screen.dart';
@@ -169,6 +170,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: '/employee/scan',
             name: 'employee-scan',
             builder: (context, state) => const EmployeeQrScannerScreen(),
+          ),
+          GoRoute(
+            path: '/employee/vigilante',
+            name: 'employee-vigilante',
+            builder: (context, state) => const EmployeeVigilanteScreen(),
           ),
           GoRoute(
             path: AppRoutes.employeeWaterMeter,

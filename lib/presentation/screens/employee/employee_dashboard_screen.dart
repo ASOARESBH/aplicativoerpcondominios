@@ -156,6 +156,13 @@ class _EmployeeDashboardScreenState
                 subtitle: 'Acompanhar solicitações',
                 route: '/employee/tickets',
               ),
+              _module(
+                context,
+                icon: Icons.shield_outlined,
+                title: 'Vigilante',
+                subtitle: 'Registrar ronda',
+                route: '/employee/vigilante',
+              ),
             ],
           ),
         ],
