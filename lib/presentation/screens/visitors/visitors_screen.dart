@@ -288,7 +288,11 @@ class _VisitorsScreenState extends ConsumerState<VisitorsScreen> {
                           child: const Icon(Icons.list, color: AppTheme.primary),
                         ),
                         const SizedBox(width: 12),
-                        const Text('Meus Visitantes', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        const Expanded(
+                          child: Text('Visitantes da Unidade', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        ),
+                        if (!_loadingList)
+                          Text('${_visitors.length}', style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.w600)),
                       ],
                     ),
                     const SizedBox(height: 12),
@@ -297,7 +301,7 @@ class _VisitorsScreenState extends ConsumerState<VisitorsScreen> {
                     else if (_visitors.isEmpty)
                       const EmptyState(
                         icon: Icons.people_outline,
-                        message: 'Nenhum visitante cadastrado.',
+                        message: 'Nenhum visitante cadastrado para a unidade.',
                       )
                     else
                       ListView.separated(
@@ -307,14 +311,21 @@ class _VisitorsScreenState extends ConsumerState<VisitorsScreen> {
                         separatorBuilder: (_, __) => const Divider(height: 1),
                         itemBuilder: (context, index) {
                           final v = _visitors[index];
-                          final isAtivo = v['ativo'] == 1 || v['ativo'] == true;
+                          final isAtivo = v['ativo'] == 1 || v['ativo'] == true || v['ativo']?.toString() == '1';
+                          final podeExcluir = v['pode_excluir'] == true;
+                          final autor = v['cadastrado_por_nome']?.toString().trim() ?? '';
+                          final proprio = v['proprio'] == true;
                           return ListTile(
                             leading: CircleAvatar(
                               backgroundColor: isAtivo ? AppTheme.primaryLight : Colors.grey[200],
                               child: Icon(Icons.person, color: isAtivo ? AppTheme.primary : Colors.grey),
                             ),
                             title: Text(v['nome_completo']?.toString() ?? ''),
-                            subtitle: Text('${v['tipo_documento']}: ${v['documento']}'),
+                            subtitle: Text(
+                              '${v['tipo_documento']}: ${v['documento']}'
+                              '${autor.isNotEmpty ? '\nCadastrado por: ${proprio ? 'você' : autor}' : ''}',
+                            ),
+                            isThreeLine: autor.isNotEmpty,
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
@@ -333,14 +344,17 @@ class _VisitorsScreenState extends ConsumerState<VisitorsScreen> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 8),
-                                IconButton(
-                                  icon: const Icon(Icons.delete_outline, color: AppTheme.danger),
-                                  onPressed: () => _deleteVisitor(
-                                    int.tryParse(v['id'].toString()) ?? 0,
-                                    v['nome_completo']?.toString() ?? '',
+                                if (podeExcluir) ...[
+                                  const SizedBox(width: 8),
+                                  IconButton(
+                                    icon: const Icon(Icons.delete_outline, color: AppTheme.danger),
+                                    tooltip: 'Excluir visitante',
+                                    onPressed: () => _deleteVisitor(
+                                      int.tryParse(v['id'].toString()) ?? 0,
+                                      v['nome_completo']?.toString() ?? '',
+                                    ),
                                   ),
-                                ),
+                                ],
                               ],
                             ),
                           );

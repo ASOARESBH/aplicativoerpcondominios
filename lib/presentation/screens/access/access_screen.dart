@@ -281,11 +281,17 @@ class _AccessScreenState extends ConsumerState<AccessScreen> {
                         children: [
                           DropdownButtonFormField<int>(
                             value: _selectedVisitorId,
+                            isExpanded: true,
                             decoration: const InputDecoration(labelText: 'Visitante *'),
+                            // Somente visitantes ativos da unidade: o backend recusa inativos.
                             items: _visitors
+                                .where((v) => v['ativo'] == 1 || v['ativo'] == true || v['ativo']?.toString() == '1')
                                 .map((v) => DropdownMenuItem<int>(
                                       value: int.tryParse(v['id'].toString()),
-                                      child: Text('${v['nome_completo']} — ${v['tipo_documento']}: ${v['documento']}'),
+                                      child: Text(
+                                        '${v['nome_completo']} — ${v['tipo_documento']}: ${v['documento']}',
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
                                     ))
                                 .toList(),
                             onChanged: (v) => setState(() => _selectedVisitorId = v),
