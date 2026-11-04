@@ -115,7 +115,8 @@ class GuestMovement {
 }
 
 /// Resultado da busca do documento digitado em Visitantes.
-/// [encontrado] só é verdadeiro para visitante da unidade do morador.
+/// [encontrado] é verdadeiro para visitante da base de Visitantes do condomínio
+/// (inclusive cadastros feitos pela portaria).
 class GuestDocumentLookup {
   final bool encontrado;
   final int? visitanteId;

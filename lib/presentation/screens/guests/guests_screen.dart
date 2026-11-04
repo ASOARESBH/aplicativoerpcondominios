@@ -696,7 +696,11 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
     if (_visitanteId != null) {
       p['visitante_id'] = int.tryParse(_visitanteId!);
     } else if (_docVisitanteId != null) {
+      // Visitante encontrado pela busca: o servidor confere que o documento é o do cadastro.
       p['visitante_id'] = _docVisitanteId;
+      p['tipo_documento'] = _tipoDocumento;
+      p['documento'] = _documentoController.text.trim();
+      p['nome'] = _nomeController.text.trim();
     } else {
       p['tipo_documento'] = _tipoDocumento;
       p['documento'] = _documentoController.text.trim();
