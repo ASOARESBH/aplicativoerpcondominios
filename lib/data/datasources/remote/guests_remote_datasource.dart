@@ -66,6 +66,11 @@ class GuestsRemoteDataSource {
     );
   }
 
+  /// Busca o documento em Visitantes (só retorna nome de visitante da unidade do morador).
+  Future<GuestDocumentLookup> buscarDocumento(String tipoDocumento, String documento) async =>
+      GuestDocumentLookup.fromJson(
+          _dados(await _call('buscar_documento', query: {'tipo_documento': tipoDocumento, 'documento': documento})));
+
   Future<GuestEntity> obter(int id) async =>
       GuestEntity.fromJson(_dados(await _call('obter', query: {'id': id})));
 

@@ -12,6 +12,7 @@ class GuestEntity {
   final String anfitriaoTipo;
   final int? dependenteId;
   final String? anfitriaoNome;
+  final int? visitanteId;
   final String dataPrevistaChegada;
   final int diasPermanencia;
   final String validadeFim;
@@ -39,6 +40,7 @@ class GuestEntity {
     required this.anfitriaoTipo,
     this.dependenteId,
     this.anfitriaoNome,
+    this.visitanteId,
     required this.dataPrevistaChegada,
     required this.diasPermanencia,
     required this.validadeFim,
@@ -73,6 +75,7 @@ class GuestEntity {
       anfitriaoTipo: _str(json['anfitriao_tipo']),
       dependenteId: _intOrNull(json['dependente_id']),
       anfitriaoNome: json['anfitriao_nome']?.toString(),
+      visitanteId: _intOrNull(json['visitante_id']),
       dataPrevistaChegada: _str(json['data_prevista_chegada']),
       diasPermanencia: _int(json['dias_permanencia']),
       validadeFim: _str(json['validade_fim']),
@@ -108,6 +111,25 @@ class GuestMovement {
   factory GuestMovement.fromJson(Map<String, dynamic> json) => GuestMovement(
         dataHora: json['data_hora']?.toString() ?? '',
         tipoAcesso: json['tipo_acesso']?.toString() ?? '',
+      );
+}
+
+/// Resultado da busca do documento digitado em Visitantes.
+/// [encontrado] só é verdadeiro para visitante da unidade do morador.
+class GuestDocumentLookup {
+  final bool encontrado;
+  final int? visitanteId;
+  final String? nome;
+  final String mensagem;
+
+  const GuestDocumentLookup({required this.encontrado, this.visitanteId, this.nome, required this.mensagem});
+
+  factory GuestDocumentLookup.fromJson(Map<String, dynamic> json) => GuestDocumentLookup(
+        encontrado: json['encontrado'] == true,
+        visitanteId: json['visitante_id'] == null ? null : int.tryParse(json['visitante_id'].toString()),
+        nome: json['nome']?.toString(),
+        mensagem: json['mensagem']?.toString() ??
+            'Visitante não cadastrado. Informe o nome completo: ao salvar, ele será cadastrado em Visitantes da sua unidade.',
       );
 }
 

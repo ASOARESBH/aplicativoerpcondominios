@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -526,6 +528,14 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
   String? _erro;
   String? _idempotencyKey;
 
+  // Busca do documento em Visitantes.
+  Timer? _buscaTimer;
+  int _buscaToken = 0;
+  String _ultimaBusca = '';
+  int? _docVisitanteId;
+  bool _buscandoDoc = false;
+  ({String tipo, String texto})? _docStatus; // tipo: found | notfound | error
+
   bool get _editando => widget.convidado != null;
 
   @override
@@ -545,6 +555,11 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
       _diasController.text = c.diasPermanencia.toString();
       _obsController.text = c.observacao ?? '';
       _chegada = DateTime.tryParse(c.dataPrevistaChegada) ?? DateTime.now();
+      if (c.visitanteId != null) {
+        _docVisitanteId = c.visitanteId;
+        _ultimaBusca = '$_tipoDocumento:${_normalizar(c.documento ?? '')}';
+        _docStatus = (tipo: 'found', texto: 'Vinculado ao cadastro de visitante ${c.nome}.');
+      }
       final key = '${c.modalidadeEntradas}|${c.limiteEntradas ?? ''}';
       if (op.modalidades.any((m) => m.key == key)) _entradaKey = key;
     }
@@ -552,6 +567,7 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
 
   @override
   void dispose() {
+    _buscaTimer?.cancel();
     _documentoController.dispose();
     _nomeController.dispose();
     _diasController.dispose();
@@ -567,6 +583,99 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
     return _dias == 1
         ? 'Válido somente em ${DateFormat('dd/MM/yyyy').format(_chegada)}'
         : 'Válido de ${DateFormat('dd/MM/yyyy').format(_chegada)} até ${DateFormat('dd/MM/yyyy').format(fim)} ($_dias dias)';
+  }
+
+  static String _normalizar(String v) => v.toUpperCase().replaceAll(RegExp(r'[^0-9A-Z]'), '');
+
+  void _resetBuscaDocumento() {
+    _buscaTimer?.cancel();
+    _buscaToken++;
+    _ultimaBusca = '';
+    final tinhaVinculo = _docVisitanteId != null;
+    _docVisitanteId = null;
+    _docStatus = null;
+    _buscandoDoc = false;
+    if (tinhaVinculo) _nomeController.clear();
+  }
+
+  /// Ao digitar: com o CPF completo busca automaticamente em Visitantes.
+  void _documentoAlterado(String valor) {
+    setState(_resetBuscaDocumento);
+    if (_tipoDocumento != 'CPF') return; // RG: busca ao concluir a digitação
+    final digitos = valor.replaceAll(RegExp(r'\D'), '');
+    if (digitos.length != 11) return;
+    if (!_cpfValido(digitos)) {
+      setState(() => _docStatus = (tipo: 'error', texto: 'CPF inválido. Confira os números digitados.'));
+      return;
+    }
+    _buscaTimer = Timer(const Duration(milliseconds: 300), _buscarDocumento);
+  }
+
+  Future<void> _buscarDocumento() async {
+    final documento = _documentoController.text.trim();
+    final chave = '$_tipoDocumento:${_normalizar(documento)}';
+    if (documento.isEmpty || chave == _ultimaBusca) return;
+    if (_tipoDocumento == 'CPF' && !_cpfValido(documento)) return;
+    if (_tipoDocumento == 'RG' && _normalizar(documento).length < 5) return;
+    _ultimaBusca = chave;
+    final token = ++_buscaToken;
+    setState(() => _buscandoDoc = true);
+    try {
+      final r = await widget.api.buscarDocumento(_tipoDocumento, documento);
+      if (!mounted || token != _buscaToken) return;
+      setState(() {
+        if (r.encontrado) {
+          _docVisitanteId = r.visitanteId;
+          _nomeController.text = r.nome ?? '';
+          _docStatus = (tipo: 'found', texto: 'Visitante já cadastrado: ${r.nome ?? ''}. O convite será vinculado a este cadastro.');
+        } else {
+          _docVisitanteId = null;
+          _docStatus = (tipo: 'notfound', texto: r.mensagem);
+        }
+      });
+    } catch (e) {
+      if (!mounted || token != _buscaToken) return;
+      _ultimaBusca = '';
+      setState(() => _docStatus = (tipo: 'error', texto: _mensagemErro(e)));
+    } finally {
+      if (mounted && token == _buscaToken) setState(() => _buscandoDoc = false);
+    }
+  }
+
+  Widget _docStatusWidget() {
+    if (_buscandoDoc) {
+      return const Padding(
+        padding: EdgeInsets.only(top: 8),
+        child: Row(children: [
+          SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2)),
+          SizedBox(width: 8),
+          Text('Buscando em Visitantes...', style: TextStyle(fontSize: 13)),
+        ]),
+      );
+    }
+    final st = _docStatus;
+    if (st == null) return const SizedBox.shrink();
+    final cor = st.tipo == 'found' ? AppTheme.success : (st.tipo == 'notfound' ? AppTheme.warning : AppTheme.danger);
+    final icone = st.tipo == 'found'
+        ? Icons.check_circle_outline
+        : (st.tipo == 'notfound' ? Icons.person_add_alt_1 : Icons.error_outline);
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: cor.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: cor.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icone, size: 18, color: cor),
+          const SizedBox(width: 8),
+          Expanded(child: Text(st.texto, style: const TextStyle(fontSize: 13))),
+        ],
+      ),
+    );
   }
 
   Map<String, dynamic> _payload() {
@@ -586,6 +695,8 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
     };
     if (_visitanteId != null) {
       p['visitante_id'] = int.tryParse(_visitanteId!);
+    } else if (_docVisitanteId != null) {
+      p['visitante_id'] = _docVisitanteId;
     } else {
       p['tipo_documento'] = _tipoDocumento;
       p['documento'] = _documentoController.text.trim();
@@ -748,6 +859,7 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
                         onChanged: (v) => setState(() {
                           _tipoDocumento = v ?? 'CPF';
                           _documentoController.clear();
+                          _resetBuscaDocumento();
                         }),
                       ),
                     ),
@@ -760,6 +872,11 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
                             ? [CpfInputFormatter()]
                             : [LengthLimitingTextInputFormatter(20)],
                         decoration: InputDecoration(labelText: 'Número *', hintText: _tipoDocumento == 'CPF' ? '000.000.000-00' : 'Número do RG'),
+                        onChanged: _documentoAlterado,
+                        onEditingComplete: () {
+                          _buscarDocumento();
+                          FocusScope.of(context).nextFocus();
+                        },
                         validator: (v) {
                           final valor = (v ?? '').trim();
                           if (valor.isEmpty) return 'Informe o documento';
@@ -770,12 +887,18 @@ class _GuestFormSheetState extends State<_GuestFormSheet> {
                     ),
                   ],
                 ),
+                _docStatusWidget(),
                 const SizedBox(height: 12),
                 TextFormField(
                   controller: _nomeController,
+                  readOnly: _docVisitanteId != null,
                   textCapitalization: TextCapitalization.words,
                   maxLength: 200,
-                  decoration: const InputDecoration(labelText: 'Nome completo *', counterText: ''),
+                  decoration: InputDecoration(
+                    labelText: 'Nome completo *',
+                    counterText: '',
+                    hintText: _docStatus?.tipo == 'notfound' ? 'Digite o nome completo do convidado' : null,
+                  ),
                   validator: (v) => (v ?? '').trim().length < 3 ? 'Informe o nome completo' : null,
                 ),
               ],
