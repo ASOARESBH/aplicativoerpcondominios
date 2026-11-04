@@ -19,12 +19,8 @@ android {
     compileOptions {
         // ✅ Obrigatório para flutter_local_notifications (Java 8+ API desugaring)
         isCoreLibraryDesugaringEnabled = true
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
-    }
-
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_11.toString()
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
 
     defaultConfig {
@@ -59,6 +55,13 @@ android {
 dependencies {
     // ✅ Biblioteca de desugaring obrigatória para flutter_local_notifications
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+}
+
+kotlin {
+    // `kotlinOptions` virou erro no Kotlin 2.2+; usar compilerOptions.
+    compilerOptions {
+        jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17
+    }
 }
 
 flutter {
