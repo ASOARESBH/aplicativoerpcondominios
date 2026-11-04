@@ -17,6 +17,7 @@ class DashboardScreen extends ConsumerWidget {
 
     final List<_MenuCard> cards = [
       _MenuCard(icon: Icons.people_outline,        label: 'Visitantes',      route: '/home/visitors',    color: const Color(0xFF4CAF50)),
+      _MenuCard(icon: Icons.how_to_reg_outlined,   label: 'Convidados',      route: '/home/guests',      color: const Color(0xFF3F51B5)),
       _MenuCard(icon: Icons.qr_code_scanner,       label: 'Acessos',         route: '/home/access',      color: const Color(0xFF2196F3)),
       _MenuCard(icon: Icons.family_restroom,        label: 'Dependentes',     route: '/home/dependents',  color: const Color(0xFF9C27B0)),
       _MenuCard(icon: Icons.water_drop_outlined,   label: 'Hidrômetro',      route: '/home/water-meter', color: const Color(0xFF00BCD4)),

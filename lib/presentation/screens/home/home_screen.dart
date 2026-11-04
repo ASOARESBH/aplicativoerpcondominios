@@ -54,6 +54,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         label: 'Dependentes',
         route: '/home/dependents'),
     _DrawerItem(
+        icon: Icons.how_to_reg_outlined,
+        label: 'Convidados',
+        route: '/home/guests'),
+    _DrawerItem(
         icon: Icons.inventory_2_outlined,
         label: 'Protocolos',
         route: '/home/protocols'),

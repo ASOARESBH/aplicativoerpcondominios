@@ -26,6 +26,9 @@ class AppConstants {
   // ─── Endpoints do Portal do Morador ──────────────────────────────────────
   static const String endpointPortal = '/api/api_portal_morador.php';
   static const String endpointDependentes = '/api/api_portal_dependentes.php';
+  /// Convidados (pré-cadastro do morador para a Lista de Convidados da portaria).
+  /// Ações via `acao=`; o app envia `canal=app` (origem APP_MORADOR definida pelo servidor).
+  static const String endpointConvidados = '/api/api_portal_convidados.php';
   static const String endpointAcessos = '/api/api_acessos_visitantes.php';
   static const String endpointHidrometro = '/api/api_morador_hidrometro.php';
   static const String endpointDocumentos = '/api/api_portal_documentos.php';

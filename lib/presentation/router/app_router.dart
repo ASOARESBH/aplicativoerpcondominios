@@ -12,6 +12,7 @@ import '../screens/auth/login_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/dependents/dependents_screen.dart';
 import '../screens/documents/documents_screen.dart';
+import '../screens/guests/guests_screen.dart';
 import '../screens/employee/employee_dashboard_screen.dart';
 import '../screens/employee/employee_delivery_screen.dart';
 import '../screens/employee/employee_login_screen.dart';
@@ -49,6 +50,7 @@ class AppRoutes {
   static const String visitors = '/home/visitors';
   static const String access = '/home/access';
   static const String dependents = '/home/dependents';
+  static const String guests = '/home/guests';
   static const String protocols = '/home/protocols';
   static const String waterMeter = '/home/water-meter';
   static const String vehicles = '/home/vehicles';
@@ -236,6 +238,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             path: AppRoutes.dependents,
             name: 'dependents',
             builder: (context, state) => const DependentsScreen(),
+          ),
+          GoRoute(
+            path: AppRoutes.guests,
+            name: 'guests',
+            builder: (context, state) => const GuestsScreen(),
           ),
           GoRoute(
             path: AppRoutes.protocols,
