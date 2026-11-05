@@ -4,11 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../core/network/notification_service.dart';
+import '../../domain/entities/chatin_entity.dart';
 import '../providers/auth_provider.dart';
 import '../screens/access/access_screen.dart';
 import '../screens/access_control/access_control_screen.dart';
 import '../screens/auth/forgot_password_screen.dart';
 import '../screens/auth/login_screen.dart';
+import '../screens/chatin/chatin_screen.dart';
 import '../screens/dashboard/dashboard_screen.dart';
 import '../screens/dependents/dependents_screen.dart';
 import '../screens/documents/documents_screen.dart';
@@ -60,6 +63,7 @@ class AppRoutes {
   static const String tickets = '/home/tickets';
   static const String marketplace = '/home/marketplace';
   static const String notifications = '/home/notifications';
+  static const String chatin = '/home/chatin';
 }
 
 /// Atualiza o redirect do GoRouter sem recriar o roteador nem perder a árvore
@@ -289,6 +293,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             name: 'notifications',
             builder: (context, state) => const NotificationsScreen(),
           ),
+          GoRoute(
+            path: AppRoutes.chatin,
+            name: 'chatin',
+            builder: (context, state) => const ChatInScreen(),
+            routes: [
+              GoRoute(
+                path: ':id',
+                name: 'chatin-conversa',
+                builder: (context, state) {
+                  final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+                  return ChatInConversationScreen(
+                    key: ValueKey('chatin-$id'),
+                    conversaId: id,
+                    conversaInicial: state.extra is ChatInConversa ? state.extra as ChatInConversa : null,
+                  );
+                },
+              ),
+            ],
+          ),
         ],
       ),
     ],
@@ -310,6 +333,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
     ),
   );
-  ref.onDispose(router.dispose);
+  // Toque em notificação (Chat-In e demais avisos com `rota`): navega assim
+  // que houver sessão de morador; se ainda não houver, aguarda o login.
+  void abrirRotaPendente() {
+    final rota = NotificationService.rotaPendente.value;
+    if (rota == null || !ref.read(authProvider).isAuthenticated) return;
+    NotificationService.rotaPendente.value = null;
+    developer.log('abrindo rota de notificação: $rota', name: 'Router');
+    if (rota.startsWith('${AppRoutes.chatin}/')) {
+      router.go(AppRoutes.chatin);
+      router.push(rota);
+    } else {
+      router.go(rota);
+    }
+  }
+
+  NotificationService.rotaPendente.addListener(abrirRotaPendente);
+  ref.listen<AuthState>(authProvider, (_, next) {
+    // pequeno atraso: deixa a Splash concluir a ida para /home antes do deep link
+    if (next.isAuthenticated) Future.delayed(const Duration(milliseconds: 700), abrirRotaPendente);
+  });
+  Future.microtask(abrirRotaPendente);
+
+  ref.onDispose(() {
+    NotificationService.rotaPendente.removeListener(abrirRotaPendente);
+    router.dispose();
+  });
   return router;
 });

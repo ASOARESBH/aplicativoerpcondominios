@@ -12,6 +12,7 @@ class NotificationChannels {
   static const String encomendas = 'encomendas';
   static const String controleAcesso = 'controle_acesso';
   static const String geral = 'erp_condominios';
+  static const String chatin = 'chatin';
 }
 
 /// Resultado de uma solicitação de alertas no dispositivo.
@@ -38,6 +39,27 @@ class NotificationService {
   factory NotificationService() => _instance;
 
   static const _preferenceDeviceAlerts = 'device_alerts_enabled';
+
+  /// Rota interna pedida por um toque em notificação (ex.: `/home/chatin/12`).
+  /// O roteador observa este valor e navega quando há sessão autenticada.
+  static final ValueNotifier<String?> rotaPendente = ValueNotifier<String?>(null);
+
+  /// Conversa do Chat-In aberta na tela agora; evita banner duplicado em primeiro plano.
+  static int? conversaChatinAberta;
+
+  /// Aceita somente rotas internas do app (nunca URLs externas vindas do push).
+  static String? rotaSegura(Map<String, dynamic> data) {
+    final rota = data['rota']?.toString() ?? '';
+    if (RegExp(r'^/home(/[A-Za-z0-9_-]+){0,3}$').hasMatch(rota)) return rota;
+    if (data['origem']?.toString() == 'chatin' || data['tipo']?.toString() == 'chatin') {
+      final id = int.tryParse(data['conversa_id']?.toString() ?? '');
+      return id != null && id > 0 ? '/home/chatin/$id' : '/home/chatin';
+    }
+    return null;
+  }
+
+  static bool _ehChatin(Map<String, dynamic> data) =>
+      data['origem']?.toString() == 'chatin' || data['tipo']?.toString() == 'chatin';
 
   final FlutterLocalNotificationsPlugin _localNotifications =
       FlutterLocalNotificationsPlugin();
@@ -89,6 +111,15 @@ class NotificationService {
       enableVibration: true,
     );
     await androidPlugin?.createNotificationChannel(accessChannel);
+    const chatinChannel = AndroidNotificationChannel(
+      NotificationChannels.chatin,
+      'Chat-In',
+      description: 'Mensagens do Chat-In e avisos do condomínio.',
+      importance: Importance.high,
+      playSound: true,
+      enableVibration: true,
+    );
+    await androidPlugin?.createNotificationChannel(chatinChannel);
 
     _localInitialized = true;
     debugPrint(
@@ -207,6 +238,9 @@ class NotificationService {
         _showForegroundMessage,
       );
       FirebaseMessaging.onMessageOpenedApp.listen(_onMessageOpened);
+      // App aberto a partir de um push com o aplicativo encerrado.
+      final inicial = await FirebaseMessaging.instance.getInitialMessage();
+      if (inicial != null) _onMessageOpened(inicial);
       debugPrint('[NotificationService] Firebase Messaging iniciado');
       return true;
     } catch (error) {
@@ -229,6 +263,10 @@ class NotificationService {
 
   Future<void> _showForegroundMessage(RemoteMessage message) async {
     final data = message.data;
+    if (_ehChatin(data)) {
+      final conversa = int.tryParse(data['conversa_id']?.toString() ?? '');
+      if (conversa != null && conversa == conversaChatinAberta) return; // já está na tela
+    }
     final title =
         message.notification?.title ?? data['titulo'] ?? 'ERP Condomínios';
     final body = message.notification?.body ??
@@ -242,7 +280,9 @@ class NotificationService {
       title: title,
       body: body,
       payload: jsonEncode(data),
-      channelId: _isControlAccessEvent(data)
+      channelId: _ehChatin(data)
+          ? NotificationChannels.chatin
+          : _isControlAccessEvent(data)
           ? NotificationChannels.controleAcesso
           : (data['tipo']?.toString().contains('mercadoria') == true
               ? NotificationChannels.encomendas
@@ -260,11 +300,24 @@ class NotificationService {
 
   void _onMessageOpened(RemoteMessage message) {
     debugPrint('[NotificationService] push aberto: ${message.data}');
+    final rota = rotaSegura(Map<String, dynamic>.from(message.data));
+    if (rota != null) rotaPendente.value = rota;
   }
 
   void _onNotificationTap(NotificationResponse response) {
     debugPrint(
         '[NotificationService] notificação local aberta: ${response.payload}');
+    final payload = response.payload;
+    if (payload == null || payload.isEmpty) return;
+    try {
+      final data = jsonDecode(payload);
+      if (data is Map) {
+        final rota = rotaSegura(Map<String, dynamic>.from(data));
+        if (rota != null) rotaPendente.value = rota;
+      }
+    } catch (_) {
+      // payload antigo ou não-JSON: apenas abre o app
+    }
   }
 
   /// Exibe uma notificação local, usada quando o app está em primeiro plano.
@@ -282,12 +335,14 @@ class NotificationService {
           ? 'Encomendas'
           : (channelId == NotificationChannels.controleAcesso
               ? 'Controle de Acesso'
-              : 'ERP Condomínios'),
+              : (channelId == NotificationChannels.chatin ? 'Chat-In' : 'ERP Condomínios')),
       channelDescription: channelId == NotificationChannels.encomendas
           ? 'Avisos de chegada e entrega de encomendas.'
           : (channelId == NotificationChannels.controleAcesso
               ? 'Avisos de veículos e movimentações de acesso da unidade.'
-              : 'Notificações do ERP Condomínios.'),
+              : (channelId == NotificationChannels.chatin
+                  ? 'Mensagens do Chat-In e avisos do condomínio.'
+                  : 'Notificações do ERP Condomínios.')),
       importance: Importance.high,
       priority: Priority.high,
       showWhen: true,

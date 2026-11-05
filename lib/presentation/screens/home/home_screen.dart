@@ -1,9 +1,12 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/theme/app_theme.dart';
 import '../../providers/auth_provider.dart';
 import '../../../core/constants/app_constants.dart';
+import '../chatin/chatin_screen.dart';
 
 /// Tela principal com Bottom Navigation Bar e Drawer para módulos secundários
 class HomeScreen extends ConsumerStatefulWidget {
@@ -14,9 +17,52 @@ class HomeScreen extends ConsumerStatefulWidget {
   ConsumerState<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends ConsumerState<HomeScreen> {
+class _HomeScreenState extends ConsumerState<HomeScreen> with WidgetsBindingObserver {
   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
   int _currentIndex = 0;
+
+  /// Ping de presença do Chat-In (morador "online") + contador de não lidas.
+  /// As telas do Chat-In fazem o próprio sync a cada 5 s; aqui basta ~30 s.
+  Timer? _chatinTimer;
+  String _chatinVersao = '';
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _pingChatIn();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    _chatinTimer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _pingChatIn();
+    } else if (state == AppLifecycleState.paused) {
+      _chatinTimer?.cancel();
+    }
+  }
+
+  Future<void> _pingChatIn() async {
+    _chatinTimer?.cancel();
+    if (!ref.read(authProvider).isAuthenticated) return;
+    try {
+      // reenviar a última versão evita que o servidor monte a lista de conversas a cada ping
+      final s = await ref.read(chatinDataSourceProvider).sync(versao: _chatinVersao);
+      _chatinVersao = s.versao;
+      if (mounted) ref.read(chatinUnreadProvider.notifier).state = s.totalNaoLidas;
+    } catch (_) {
+      // Chat-In indisponível (ex.: migration pendente): o app segue normalmente
+    } finally {
+      if (mounted) _chatinTimer = Timer(const Duration(seconds: 30), _pingChatIn);
+    }
+  }
 
   // Itens do Bottom Navigation (módulos principais)
   static const _navItems = [
@@ -57,6 +103,10 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
         icon: Icons.how_to_reg_outlined,
         label: 'Convidados',
         route: '/home/guests'),
+    _DrawerItem(
+        icon: Icons.forum_outlined,
+        label: 'Chat-In',
+        route: '/home/chatin'),
     _DrawerItem(
         icon: Icons.inventory_2_outlined,
         label: 'Protocolos',
@@ -135,6 +185,18 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
           ],
         ),
         actions: [
+          Consumer(builder: (context, ref, _) {
+            final naoLidas = ref.watch(chatinUnreadProvider);
+            return IconButton(
+              tooltip: 'Chat-In',
+              icon: Badge(
+                isLabelVisible: naoLidas > 0,
+                label: Text(naoLidas > 99 ? '99+' : '$naoLidas'),
+                child: const Icon(Icons.forum_outlined),
+              ),
+              onPressed: () => context.go('/home/chatin'),
+            );
+          }),
           IconButton(
             icon: const Icon(Icons.notifications_outlined),
             onPressed: () => context.go('/home/notifications'),
